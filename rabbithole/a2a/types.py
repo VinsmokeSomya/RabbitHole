@@ -117,21 +117,41 @@ class PushNotificationConfig(BaseModel):
     authentication: AuthenticationInfo | None = None
 
 
-TaskIdParams = TypeVar("TaskIdParams")
-TaskQueryParams = TypeVar("TaskQueryParams")
-TaskSendParams = TypeVar("TaskSendParams")
-TaskPushNotificationConfig = TypeVar("TaskPushNotificationConfig")
+class TaskIdParams(BaseModel):
+    id: str
+    metadata: dict[str, Any] | None = None
 
-P = TypeVar("P")
+
+class TaskQueryParams(TaskIdParams):
+    historyLength: int | None = None
+
+
+class TaskSendParams(BaseModel):
+    id: str
+    sessionId: str = Field(default_factory=lambda: uuid4().hex)
+    message: Message
+    acceptedOutputModes: Optional[List[str]] = None
+    pushNotification: PushNotificationConfig | None = None
+    historyLength: int | None = None
+    metadata: dict[str, Any] | None = None
+
+
+class TaskPushNotificationConfig(BaseModel):
+    id: str
+    pushNotificationConfig: PushNotificationConfig
+
+
+P_PARAMS = TypeVar("P_PARAMS")
+
 
 class JSONRPCMessage(BaseModel):
     jsonrpc: Literal["2.0"] = "2.0"
     id: int | str | None = Field(default_factory=lambda: uuid4().hex)
 
 
-class JSONRPCRequest(JSONRPCMessage, Generic[P]):
+class JSONRPCRequest(JSONRPCMessage, Generic[P_PARAMS]):
     method: str
-    params: P
+    params: P_PARAMS
 
 
 class JSONRPCError(BaseModel):
@@ -204,20 +224,24 @@ class TaskResubscriptionRequest(JSONRPCRequest[TaskIdParams]):
     params: TaskIdParams
 
 
-A2ARequest = TypeAdapter(
+A2ARequest_T = Union[
+    SendTaskRequest,
+    GetTaskRequest,
+    CancelTaskRequest,
+    SetTaskPushNotificationRequest,
+    GetTaskPushNotificationRequest,
+    TaskResubscriptionRequest,
+    SendTaskStreamingRequest,
+]
+
+
+A2ARequest: TypeAdapter[Annotated[A2ARequest_T, Field(discriminator="method")]] = TypeAdapter(
     Annotated[
-        Union[
-            SendTaskRequest,
-            GetTaskRequest,
-            CancelTaskRequest,
-            SetTaskPushNotificationRequest,
-            GetTaskPushNotificationRequest,
-            TaskResubscriptionRequest,
-            SendTaskStreamingRequest,
-        ],
+        A2ARequest_T,
         Field(discriminator="method"),
     ]
 )
+
 
 ## Error types
 
