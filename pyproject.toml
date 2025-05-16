@@ -17,6 +17,7 @@ dependencies = [
     "httpx>=0.27.2",
     "httpx-sse>=0.4.0",
     "jwcrypto>=1.5.6",
+    "python-jose>=3.3.0",
     "pydantic>=2.10.6",
     "pyjwt>=2.10.1",
     "sse-starlette>=2.2.1",
@@ -29,8 +30,9 @@ dependencies = [
     "openai-agents",
     "google-adk==0.4.0",
     "asyncclick",
-    "litellm",
-    "google-genai"
+    "litellm>=1.36.0",
+    "google-generativeai>=0.5.0",
+    "streamlit>=1.33.0"
 ]
 
 # Optional dependencies - grouped by purpose
@@ -60,3 +62,9 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 # Specifies the package directory to include in the wheel
 packages = ["rabbithole"]
+
+[project.scripts]
+rabbithole-cli = "rabbithole.cli.__main__:main"
+rabbithole-adk-server = "rabbithole.agent.adk.__main__:main"
+# rabbithole-oai-server = "rabbithole.agent.oai.__main__:main" # If you have an OAI server entry point
+rabbithole-streamlit = "rabbithole.ui.streamlit_app:run_streamlit_app" # Entry point for Streamlit app

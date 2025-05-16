@@ -134,13 +134,26 @@ class AgentTaskManager(InMemoryTaskManager):
 
         task_send_params: TaskSendParams = request.params
         query = self._get_user_query(task_send_params)
+        
+        final_agent_response_dict = None
         try:
-            agent_response = self.agent.invoke(query, task_send_params.sessionId)
+            # Consume the async generator from agent.invoke()
+            async for item in self.agent.invoke(query, task_send_params.sessionId):
+                final_agent_response_dict = item # Take the (presumably only) item
+                break # Assuming invoke for non-streaming should yield one definitive response
+            
+            if final_agent_response_dict is None:
+                logger.error(f"Agent invoke for task {task_send_params.id} yielded no response.")
+                # Create a default error-like response if nothing was yielded
+                final_agent_response_dict = {"content": "Agent yielded no response.", "require_user_input": False, "is_task_complete": True}
+
         except Exception as e:
-            logger.error(f"Error invoking agent: {e}")
-            raise ValueError(f"Error invoking agent: {e}")
+            logger.error(f"Error invoking agent or processing its generator: {e}")
+            # Return a SendTaskResponse with an error
+            return SendTaskResponse(id=request.id, error=InternalError(message=f"Error invoking agent: {str(e)}"))
+        
         return await self._process_agent_response(
-            request, agent_response
+            request, final_agent_response_dict # Now passing a dict
         )
 
     async def on_send_task_subscribe(

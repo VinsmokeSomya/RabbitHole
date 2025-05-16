@@ -28,20 +28,29 @@
 - [🔄 Project Workflow Diagram](#project-workflow-diagram)
 - [🤝 Contributing](#contributing)
 - [📝 License](#license)
+- [🎨 Using the Streamlit UI](#using-the-streamlit-ui)
 
 ## 🛠️ Installation
 
+
+#### 1. Clone the RabbitHole repository 🐾
 ```bash
-# 1. Clone the RabbitHole repository 🐾
 git clone https://github.com/VinsmokeSomya/RabbitHole.git
 cd RabbitHole
 ```
 
+#### 2. Create a virtual environment and install dependencies ➕🐍
+
 ```bash
-# 2. Create a virtual environment and install dependencies ➕🐍
 # (Using uv, a fast Python package installer and resolver)
 uv venv
+```
+
+```bash
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+```
+
+```bash
 uv pip install -e ".[dev]"  # Editable install + development extras
 ```
 
@@ -83,11 +92,22 @@ cd rabbithole/agent/adk
 ```
 
 #### Step 2: Set Up Your Environment 🔑
-Create a `.env` file in the chosen agent directory (`rabbithole/agent/adk/`) to store your API credentials:
+For the ADK agent, navigate to `rabbithole/agent/adk/`. You will find a file named `.env.template`.
+Copy this file to a new file named `.env` in the *same directory* (`rabbithole/agent/adk/`).
+
 ```bash
-# Replace 'your_api_key_here' with your actual Google API Key
-echo "GOOGLE_API_KEY=your_api_key_here" > .env
+# Inside the rabbithole/agent/adk/ directory:
+cp .env.template .env
 ```
+
+Then, open the newly created `.env` file and replace `your_actual_google_api_key_here` with your actual Google API Key:
+
+```env
+# Contents of rabbithole/agent/adk/.env
+GOOGLE_API_KEY=AIzaSyXXXXXXXXXX...
+```
+*Note: The ADK agent currently uses the `gemini/gemini-1.5-flash` model. This can be changed in `rabbithole/agent/adk/agent.py` if needed.*
+
 You can also add other environment variables if required by your agent (e.g., for other LLM providers).
 
 #### Step 3: Launch the Agent Server 📡
@@ -158,8 +178,8 @@ Let's break down this command:
 *   `docker run`: The command to start a new container.
 *   `--rm`: Automatically removes the container when it stops. This is useful for cleanup.
 *   `-it`: Runs the container in interactive mode and allocates a pseudo-TTY, allowing you to see the server logs and stop it with `Ctrl+C`.
-*   `-e GOOGLE_API_KEY="YOUR_ACTUAL_GOOGLE_API_KEY"`: This is **crucial**. It sets the `GOOGLE_API_KEY` environment variable inside the container. Replace `"YOUR_ACTUAL_GOOGLE_API_KEY"` with your real Google API key. The agent server running inside the container will use this key.
-*   `-p 10000:10000`: Maps port `10000` on your host machine to port `10000` inside the container. The ADK agent server in the Docker image is configured to run on port `10000` and listen on `0.0.0.0`.
+*   `-e GOOGLE_API_KEY="YOUR_ACTUAL_GOOGLE_API_KEY"`: This is **crucial**. It sets the `GOOGLE_API_KEY` environment variable inside the container. Replace `"YOUR_ACTUAL_GOOGLE_API_KEY"` with your real Google API key. The agent server running inside the container (which loads its key from the environment) will use this key.
+*   `-p 10000:10000`: Maps port `10000` on your host machine to port `10000` inside the container. The ADK agent server in the Docker image is configured to run on port `10000` (see `Dockerfile` `AGENT_PORT` and `CMD`).
 *   `rabbithole-adk-agent`: The name of the Docker image to run.
 
 After running this command, the ADK agent server should be running inside the Docker container, and you should see its logs in your terminal.
@@ -267,6 +287,38 @@ We're actively expanding support for other agent frameworks and cool features! I
 
 Your contributions are highly welcome!
 
+<<<<<<< Updated upstream
+=======
+## 🎨 Using the Streamlit UI
+
+RabbitHole also includes a basic Streamlit web UI to interact with your agents.
+
+**Prerequisites:**
+
+1.  Ensure your agent server (e.g., the ADK agent) is running. See the [Quick Start Guide](#quick-start-guide) or [Running with Docker](#running-with-docker) sections.
+2.  Make sure you have installed the necessary dependencies. If you installed with `.[dev]`, Streamlit should be included. Otherwise, ensure Streamlit is installed in your environment:
+    ```bash
+    # If you haven't installed all extras, you might need:
+    pip install streamlit
+    ```
+
+    
+    #### or with uv
+    ```bash
+    uv pip install streamlit
+    ```
+
+**Running the UI:**
+
+Navigate to the project root directory and run the following command in your terminal (ensure your virtual environment is activated):
+
+```bash
+streamlit run rabbithole/ui/streamlit_app.py
+```
+
+This will start the Streamlit application, and it should open in your web browser. You can then configure the Agent Server URL in the sidebar (default is `http://localhost:10000`) and start chatting with your agent.
+
+>>>>>>> Stashed changes
 ## 📝 License
 
 This project is licensed under the [MIT License](LICENSE).

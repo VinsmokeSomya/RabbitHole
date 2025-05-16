@@ -7,8 +7,11 @@ import click
 import os
 import logging
 from dotenv import load_dotenv
+from pathlib import Path
 
-load_dotenv()
+# Explicitly load .env from the same directory as __main__.py
+dotenv_path = Path(__file__).resolve().parent / '.env'
+load_dotenv(dotenv_path=dotenv_path, override=True)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

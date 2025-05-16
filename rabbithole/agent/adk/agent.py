@@ -18,11 +18,12 @@ class ResponseFormat(BaseModel):
 class ADKAgent:
      
     def __init__(self):
+        api_key_value = os.environ.get("GOOGLE_API_KEY")
         self.agent = Agent(
             name="Assistant",
             model=LiteLlm(
-                model="gemini/gemini-pro",
-                api_key=os.environ.get("GOOGLE_API_KEY")
+                model="gemini/gemini-1.5-flash",
+                api_key=api_key_value
             ),
             description=(
                 "Agent to answer any questions."

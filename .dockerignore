@@ -31,9 +31,9 @@ dist/
 *.sqlite3
 
 # Local environment files - should be passed via -e in docker run
-.env
-*/.env
-*/**/.env
+# Specifically ignore the ADK agent's .env and any root .env
+/.env
+rabbithole/agent/adk/.env
 
 # Docker related (to avoid copying Dockerfile itself if context is .)
 Dockerfile

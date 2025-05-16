@@ -43,4 +43,4 @@ EXPOSE ${AGENT_PORT}
 #    This runs the ADK agent's __main__.py.
 #    It's crucial to use --host 0.0.0.0 so the server is accessible
 #    from outside the container when a port is mapped.
-CMD ["python", "rabbithole/agent/adk/__main__.py", "--host", "0.0.0.0", "--port", "10000"] 
+CMD ["python", "rabbithole/agent/adk/__main__.py", "--host", "0.0.0.0", "--port", "${AGENT_PORT}"] 
