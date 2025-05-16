@@ -1,10 +1,14 @@
 from rabbithole.a2a.server import A2AServer
-from rabbithole.a2a.types import AgentCard, AgentCapabilities, AgentSkill, MissingAPIKeyError
+from rabbithole.a2a.types import (
+    AgentCard,
+    AgentCapabilities,
+    AgentSkill,
+    MissingAPIKeyError,
+)
 from rabbithole.a2a.utils.push_notification_auth import PushNotificationSenderAuth
 from rabbithole.agent.oai.task_manager import AgentTaskManager
 from rabbithole.agent.oai.agent import OAIAgent
 import click
-import os
 import logging
 from dotenv import load_dotenv
 
@@ -12,6 +16,7 @@ load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 @click.command()
 @click.option("--host", "host", default="localhost")
@@ -42,13 +47,17 @@ def main(host, port):
         notification_sender_auth.generate_jwk()
         server = A2AServer(
             agent_card=agent_card,
-            task_manager=AgentTaskManager(agent=OAIAgent(), notification_sender_auth=notification_sender_auth),
+            task_manager=AgentTaskManager(
+                agent=OAIAgent(), notification_sender_auth=notification_sender_auth
+            ),
             host=host,
             port=port,
         )
 
         server.app.add_route(
-            "/.well-known/oai.json", notification_sender_auth.handle_jwks_endpoint, methods=["GET"]
+            "/.well-known/oai.json",
+            notification_sender_auth.handle_jwks_endpoint,
+            methods=["GET"],
         )
 
         logger.info(f"Starting server on {host}:{port}")

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Union, AsyncIterable, List, Optional, Any, Dict
+from typing import Union, AsyncIterable, List, Any
 from rabbithole.a2a.types import (
     Task,
     JSONRPCResponse,
@@ -17,7 +17,6 @@ from rabbithole.a2a.types import (
     SendTaskResponse,
     SetTaskPushNotificationResponse,
     GetTaskPushNotificationResponse,
-    PushNotificationNotSupportedError,
     TaskSendParams,
     TaskStatus,
     TaskState,
@@ -36,6 +35,7 @@ import asyncio
 import logging
 
 logger = logging.getLogger(__name__)
+
 
 class TaskManager(ABC):
     @abstractmethod
@@ -119,7 +119,9 @@ class InMemoryTaskManager(TaskManager):
     ) -> Union[AsyncIterable[SendTaskStreamingResponse], JSONRPCResponse]:
         pass
 
-    async def set_push_notification_info(self, task_id: str, notification_config: PushNotificationConfig):
+    async def set_push_notification_info(
+        self, task_id: str, notification_config: PushNotificationConfig
+    ):
         async with self.lock:
             task = self.tasks.get(task_id)
             if task is None:
@@ -128,7 +130,7 @@ class InMemoryTaskManager(TaskManager):
             self.push_notification_infos[task_id] = notification_config
 
         return
-    
+
     async def get_push_notification_info(self, task_id: str) -> PushNotificationConfig:
         async with self.lock:
             task = self.tasks.get(task_id)
@@ -136,13 +138,12 @@ class InMemoryTaskManager(TaskManager):
                 raise ValueError(f"Task not found for {task_id}")
 
             return self.push_notification_infos[task_id]
-            
+
         return
-    
+
     async def has_push_notification_info(self, task_id: str) -> bool:
         async with self.lock:
             return task_id in self.push_notification_infos
-            
 
     async def on_set_task_push_notification(
         self, request: SetTaskPushNotificationRequest
@@ -151,7 +152,10 @@ class InMemoryTaskManager(TaskManager):
         task_notification_params: TaskPushNotificationConfig = request.params
 
         try:
-            await self.set_push_notification_info(task_notification_params.id, task_notification_params.pushNotificationConfig)
+            await self.set_push_notification_info(
+                task_notification_params.id,
+                task_notification_params.pushNotificationConfig,
+            )
         except Exception as e:
             logger.error(f"Error while setting push notification info: {e}")
             return SetTaskPushNotificationResponse(
@@ -160,8 +164,10 @@ class InMemoryTaskManager(TaskManager):
                     message="An error occurred while setting push notification info"
                 ),
             )
-            
-        return SetTaskPushNotificationResponse(id=request.id, result=task_notification_params)
+
+        return SetTaskPushNotificationResponse(
+            id=request.id, result=task_notification_params
+        )
 
     async def on_get_task_push_notification(
         self, request: GetTaskPushNotificationRequest
@@ -179,8 +185,13 @@ class InMemoryTaskManager(TaskManager):
                     message="An error occurred while getting push notification info"
                 ),
             )
-        
-        return GetTaskPushNotificationResponse(id=request.id, result=TaskPushNotificationConfig(id=task_params.id, pushNotificationConfig=notification_info))
+
+        return GetTaskPushNotificationResponse(
+            id=request.id,
+            result=TaskPushNotificationConfig(
+                id=task_params.id, pushNotificationConfig=notification_info
+            ),
+        )
 
     async def upsert_task(self, task_send_params: TaskSendParams) -> Task:
         logger.info(f"Upserting task {task_send_params.id}")
@@ -189,7 +200,7 @@ class InMemoryTaskManager(TaskManager):
             if task is None:
                 task = Task(
                     id=task_send_params.id,
-                    sessionId = task_send_params.sessionId,
+                    sessionId=task_send_params.sessionId,
                     status=TaskStatus(state=TaskState.SUBMITTED),
                     history=[task_send_params.message],
                 )
@@ -240,7 +251,7 @@ class InMemoryTaskManager(TaskManager):
         else:
             new_task.history = []
 
-        return new_task        
+        return new_task
 
     async def setup_sse_consumer(self, task_id: str, is_resubscribe: bool = False):
         async with self.subscriber_lock:
@@ -250,7 +261,9 @@ class InMemoryTaskManager(TaskManager):
                 else:
                     self.task_sse_subscribers[task_id] = []
 
-            sse_event_queue: asyncio.Queue[Any] = asyncio.Queue(maxsize=0) # <=0 is unlimited
+            sse_event_queue: asyncio.Queue[Any] = asyncio.Queue(
+                maxsize=0
+            )  # <=0 is unlimited
             self.task_sse_subscribers[task_id].append(sse_event_queue)
             return sse_event_queue
 
@@ -283,12 +296,12 @@ class InMemoryTaskManager(TaskManager):
                 # This depends on when setup_sse_consumer and dequeue_events_for_sse are called relative to HTTP response generation.
                 # For now, we'll assume the check for task existence happens before calling this, or handle it by closing the queue.
                 # This specific error scenario points to a need for robust error signaling within the SSE stream itself if possible.
-                sse_event_queue.put_nowait(None) # Signal end of stream
+                sse_event_queue.put_nowait(None)  # Signal end of stream
                 # This yield is to make it an async generator, but it won't be reached if task_id not found.
                 # So the generator will be empty. Client will just disconnect.
-                if False: # mypy trick
+                if False:  # mypy trick
                     yield
-                return # Or raise an error that leads to a non-SSE error response if possible before headers are sent.
+                return  # Or raise an error that leads to a non-SSE error response if possible before headers are sent.
 
         try:
             while True:
@@ -296,7 +309,7 @@ class InMemoryTaskManager(TaskManager):
                 if event is None:  # Sentinel value to signal end of stream
                     logger.info(f"SSE stream for task {task_id} ended by sentinel.")
                     break
-                
+
                 logger.debug(f"Sending event for task {task_id}: {event}")
                 # Based on the original SendTaskStreamingResponse, event should be TaskStatusUpdateEvent
                 # Ensure that whatever is put into the queue is serializable into SendTaskStreamingResponse
@@ -306,12 +319,20 @@ class InMemoryTaskManager(TaskManager):
                     # This path may not be robust for SSE, as errors are usually not sent this way mid-stream.
                     # Client might not handle a JSONRPCError object sent as an SSE event correctly.
                     # It's better to have a specific event type for errors if needed, e.g., TaskErrorEvent.
-                    yield SendTaskStreamingResponse(error=event) # Or handle error differently
+                    yield SendTaskStreamingResponse(
+                        error=event
+                    )  # Or handle error differently
                 else:
                     # Fallback or error for unexpected event types
-                    logger.error(f"Unknown event type in SSE queue for task {task_id}: {type(event)}")
+                    logger.error(
+                        f"Unknown event type in SSE queue for task {task_id}: {type(event)}"
+                    )
                     # Potentially send a generic error event or close stream
-                    yield SendTaskStreamingResponse(error=InternalError(message=f"Unknown event type in SSE queue: {type(event)}"))
+                    yield SendTaskStreamingResponse(
+                        error=InternalError(
+                            message=f"Unknown event type in SSE queue: {type(event)}"
+                        )
+                    )
 
                 sse_event_queue.task_done()
         except asyncio.CancelledError:
@@ -325,8 +346,10 @@ class InMemoryTaskManager(TaskManager):
             logger.info(f"Cleaning up SSE stream for task {task_id}")
             # Attempt to remove the queue from subscribers list
             async with self.subscriber_lock:
-                if task_id in self.task_sse_subscribers and sse_event_queue in self.task_sse_subscribers[task_id]:
+                if (
+                    task_id in self.task_sse_subscribers
+                    and sse_event_queue in self.task_sse_subscribers[task_id]
+                ):
                     self.task_sse_subscribers[task_id].remove(sse_event_queue)
-                    if not self.task_sse_subscribers[task_id]: # if list is empty
+                    if not self.task_sse_subscribers[task_id]:  # if list is empty
                         del self.task_sse_subscribers[task_id]
-

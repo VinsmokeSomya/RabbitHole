@@ -18,19 +18,18 @@ from rabbithole.a2a.types import (
     A2AClientJSONError,
     SendTaskStreamingRequest,
     SendTaskStreamingResponse,
-    TaskState,
-    Task,
     TaskSendParams,
     TaskQueryParams,
     TaskIdParams,
     TaskPushNotificationConfig,
-)   
+)
 import json
-import logging
 
 
 class A2AClient:
-    def __init__(self, agent_card: Optional[AgentCard] = None, url: Optional[str] = None):
+    def __init__(
+        self, agent_card: Optional[AgentCard] = None, url: Optional[str] = None
+    ):
         if agent_card:
             self.url = agent_card.url
         elif url:
