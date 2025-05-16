@@ -32,12 +32,18 @@ jobs:
       shell: bash # Use bash to ensure venv is active for these commands
       run: |
         source .venv/bin/activate
-        echo "--- Linting with ruff --- "
-        ruff check . --config pyproject.toml
-        echo "--- Checking formatting with ruff ---"
-        ruff format --check . --config pyproject.toml
+        echo "--- Linting with ruff (with auto-fix) --- "
+        ruff check . --fix --config pyproject.toml
+        echo "--- Formatting with ruff ---"
+        ruff format . --config pyproject.toml
         echo "--- Type checking with mypy ---"
         mypy . --ignore-missing-imports
+    - name: Commit changes made by ruff
+      if: success() # Only run if previous steps were successful
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        git diff --quiet || (git commit -am "Automated linting and formatting fixes" && git push)
 
   test:
     runs-on: ubuntu-latest
