@@ -28,10 +28,6 @@ jobs:
       run: |
         source .venv/bin/activate
         uv pip install -e ".[dev]"
-        echo "--- Contents of .venv/bin --- "
-        ls -la .venv/bin
-        echo "--- Current PATH --- "
-        echo $PATH
     - name: Linting and Formatting Checks
       shell: bash # Use bash to ensure venv is active for these commands
       run: |
@@ -41,7 +37,7 @@ jobs:
         echo "--- Formatting with ruff ---"
         ruff format . --config pyproject.toml
         echo "--- Type checking with mypy ---"
-        .venv/bin/mypy . --ignore-missing-imports
+        python -m mypy . --ignore-missing-imports
     - name: Commit changes made by ruff
       if: success() # Only run if previous steps were successful
       run: |
