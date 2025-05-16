@@ -28,6 +28,10 @@ jobs:
       run: |
         source .venv/bin/activate
         uv pip install -e ".[dev]"
+        echo "--- Contents of .venv/bin --- "
+        ls -la .venv/bin
+        echo "--- Current PATH --- "
+        echo $PATH
     - name: Linting and Formatting Checks
       shell: bash # Use bash to ensure venv is active for these commands
       run: |
