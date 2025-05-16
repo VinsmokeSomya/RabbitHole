@@ -3,6 +3,7 @@ import asyncio
 import base64
 import os
 import urllib
+from urllib.parse import urljoin # For robust URL joining
 from uuid import uuid4
 from dotenv import load_dotenv
 from typing import Optional, Union, cast, List, Any
@@ -19,13 +20,13 @@ from rabbithole.a2a.types import (
     TaskSendParams,
     PushNotificationConfig,
     AuthenticationInfo,
-    AuthenticationSchemeChoice,
     GetTaskResponse,
     SendTaskResponse,
     TaskQueryParams,
     AgentCard,
     TaskStatusUpdateEvent,
     TaskArtifactUpdateEvent,
+    AgentAuthentication, # For type hint
 )
 from rabbithole.a2a.utils.push_notification_auth import PushNotificationReceiverAuth
 
@@ -38,7 +39,7 @@ PartCli = Union[TextPart, FilePart, DataPart]
 @click.option("--use_push_notifications", default=False, is_flag=True)
 @click.option("--push_notification_receiver", default="http://localhost:5000")
 async def cli(agent: str, session: str, history: bool, use_push_notifications: bool, push_notification_receiver: str):
-    card_resolver = A2ACardResolver(url=agent)
+    card_resolver = A2ACardResolver(base_url=agent)
     card_obj = card_resolver.get_agent_card()
 
     if not card_obj:
@@ -61,28 +62,36 @@ async def cli(agent: str, session: str, history: bool, use_push_notifications: b
             use_push_notifications = False
         else:
             from .push_notification_listener import PushNotificationListener
-            agent_base_url = card_obj.url
-            parsed_agent_url = urllib.parse.urlparse(agent_base_url)
-            well_known_jwks_url = urllib.parse.urlunparse(
-                (parsed_agent_url.scheme, parsed_agent_url.netloc, "/.well-known/jwks.json", "", "", "")
-            )
-            jwks_uri_from_card = None
-            if card_obj.authentication:
-                for auth_method_info in card_obj.authentication:
-                    if auth_method_info and auth_method_info.scheme == AuthenticationSchemeChoice.BEARER_TOKEN and auth_method_info.jwksUrl:
-                        jwks_uri_from_card = auth_method_info.jwksUrl
-                        break
             
-            jwks_url_to_use = jwks_uri_from_card or well_known_jwks_url
-
-            print(f"Attempting to load JWKS from: {jwks_url_to_use}")
+            # The JWKS for validating push notifications from the A2A server
+            # should typically be at a well-known URI relative to the server's base URL.
+            # card_obj.url is the A2A server's endpoint.
+            agent_server_base_url = card_obj.url # This is the server's endpoint from its card
+            
+            # Construct the well-known JWKS URI for the A2A server
+            # Ensure agent_server_base_url ends with a slash for urljoin if it's a base path
+            if not agent_server_base_url.endswith('/'):
+                agent_server_base_url_for_join = agent_server_base_url + '/'
+            else:
+                agent_server_base_url_for_join = agent_server_base_url
+            
+            # A common convention, but server might expose it differently.
+            # Ideally, the A2A server's AgentCard would have a dedicated field for its push notification signing jwks_uri.
+            # Since it doesn't, we assume a conventional path.
+            server_jwks_url = urljoin(agent_server_base_url_for_join, ".well-known/jwks.json")
+            
+            print(f"Attempting to load A2A Server's JWKS from: {server_jwks_url} (for verifying received push notifications)")
 
             notification_receiver_auth = PushNotificationReceiverAuth()
             try:
-                print(f"JWKS loading from {jwks_url_to_use} needs to be implemented if not handled by PushNotificationReceiverAuth.")
+                # TODO: PushNotificationReceiverAuth needs to be able to load JWKS from a URL
+                # or be given the keys directly. This part is still a placeholder.
+                # For now, we'll assume it might try to fetch, or this will be a manual setup.
+                # await notification_receiver_auth.load_jwks(server_jwks_url)
+                print(f"JWKS loading for PushNotificationReceiverAuth from {server_jwks_url} needs actual implementation.")
 
             except Exception as e:
-                print(f"Failed to load JWKS: {e}. Push notifications might not be authenticated correctly.")
+                print(f"Failed to load A2A Server's JWKS: {e}. Push notifications might not be authenticated correctly.")
 
             push_notification_listener = PushNotificationListener(
                 host=cast(str, notification_receiver_host),
@@ -179,9 +188,12 @@ async def completeTask(
     )
 
     if use_push_notifications and notification_receiver_host and notification_receiver_port:
+        # This describes the authentication the CLI's push listener expects from the A2A server.
+        # For bearer tokens, the A2A server would include a token in its push notification.
+        # The CLI's PushNotificationReceiverAuth would then validate this token using the A2A server's JWKS.
         task_send_params.pushNotification = PushNotificationConfig(
             url=f"http://{notification_receiver_host}:{notification_receiver_port}/notify",            
-            authentication=AuthenticationInfo(scheme=AuthenticationSchemeChoice.BEARER_TOKEN)
+            authentication=AuthenticationInfo(schemes=["bearer"]) # schemes is a list of strings
         )
 
     taskResult: Union[GetTaskResponse, SendTaskResponse, None] = None
