@@ -37,7 +37,7 @@ jobs:
         echo "--- Formatting with ruff ---"
         ruff format . --config pyproject.toml
         echo "--- Type checking with mypy ---"
-        mypy . --ignore-missing-imports
+        python -m mypy . --ignore-missing-imports
     - name: Commit changes made by ruff
       if: success() # Only run if previous steps were successful
       run: |
