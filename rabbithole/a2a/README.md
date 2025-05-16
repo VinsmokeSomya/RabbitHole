@@ -1,19 +1,19 @@
-# Google A2A
+# RabbitHole A2A
 <u>**This document is from the [official Google A2A](https://github.com/google/A2A/blob/main/README.md) documentation.**</u>
 
 **An open protocol enabling communication and interoperability between opaque agentic applications.**
 
-One of the biggest challenges in enterprise AI adoption is getting agents built on different frameworks and vendors to work together. That’s why we created an open *Agent2Agent (A2A) protocol*, a collaborative way to help agents across different ecosystems communicate with each other. Google is driving this open protocol initiative for the industry because we believe this protocol will be **critical to support multi-agent communication by giving your agents a common language – irrespective of the framework or vendor they are built on**. 
-With *A2A*, agents can show each other their capabilities and negotiate how they will interact with users (via text, forms, or bidirectional audio/video) – all while working securely together.
+One of the biggest challenges in enterprise AI adoption is getting agents built on different frameworks and vendors to work together. That's why we created an open *RabbitHole A2A Protocol*, a collaborative way to help agents across different ecosystems communicate with each other. Google is driving this open protocol initiative for the industry because we believe this protocol will be **critical to support multi-agent communication by giving your agents a common language – irrespective of the framework or vendor they are built on**. 
+With *RabbitHole A2A*, agents can show each other their capabilities and negotiate how they will interact with users (via text, forms, or bidirectional audio/video) – all while working securely together.
 
 
 ## Conceptual Overview
 
-The Agent2Agent (A2A) protocol facilitates communication between independent AI agents. Here are the core concepts:
+The RabbitHole A2A Protocol facilitates communication between independent AI agents. Here are the core concepts:
 
 *   **Agent Card:** A public metadata file (usually at `/.well-known/agent.json`) describing an agent's capabilities, skills, endpoint URL, and authentication requirements. Clients use this for discovery.
-*   **A2A Server:** An agent exposing an HTTP endpoint that implements the A2A protocol methods (defined in the [json specification](/specification)). It receives requests and manages task execution.
-*   **A2A Client:** An application or another agent that consumes A2A services. It sends requests (like `tasks/send`) to an A2A Server's URL.
+*   **A2A Server:** An agent exposing an HTTP endpoint that implements the RabbitHole A2A protocol methods (defined in the [json specification](/specification)). It receives requests and manages task execution.
+*   **A2A Client:** An application or another agent that consumes RabbitHole A2A services. It sends requests (like `tasks/send`) to an A2A Server's URL.
 *   **Task:** The central unit of work. A client initiates a task by sending a message (`tasks/send` or `tasks/sendSubscribe`). Tasks have unique IDs and progress through states (`submitted`, `working`, `input-required`, `completed`, `failed`, `canceled`).
 *   **Message:** Represents communication turns between the client (`role: "user"`) and the agent (`role: "agent"`). Messages contain `Parts`.
 *   **Part:** The fundamental content unit within a `Message` or `Artifact`. Can be `TextPart`, `FilePart` (with inline bytes or a URI), or `DataPart` (for structured JSON, e.g., forms).

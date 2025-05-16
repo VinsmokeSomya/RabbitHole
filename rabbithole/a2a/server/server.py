@@ -16,10 +16,11 @@ from rabbithole.a2a.types import (
     AgentCard,
     TaskResubscriptionRequest,
     SendTaskStreamingRequest,
+    JSONRPCError,
 )
 from pydantic import ValidationError
 import json
-from typing import AsyncIterable, Any, Union
+from typing import AsyncIterable, Any, Union, Optional
 from rabbithole.a2a.server.task_manager import TaskManager
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
@@ -35,8 +36,8 @@ class A2AServer:
         host="0.0.0.0",
         port=5000,
         endpoint="/",
-        agent_card: AgentCard = None,
-        task_manager: TaskManager = None,
+        agent_card: Optional[AgentCard] = None,
+        task_manager: Optional[TaskManager] = None,
     ):
         self.host = host
         self.port = port
@@ -68,6 +69,7 @@ class A2AServer:
             body = await request.json()
             json_rpc_request = A2ARequest.validate_python(body)
 
+            result: Any
             if isinstance(json_rpc_request, GetTaskRequest):
                 result = await self.task_manager.on_get_task(json_rpc_request)
             elif isinstance(json_rpc_request, SendTaskRequest):
@@ -96,6 +98,7 @@ class A2AServer:
             return self._handle_exception(e)
 
     def _handle_exception(self, e: Exception) -> JSONResponse:
+        json_rpc_error: JSONRPCError
         if isinstance(e, json.decoder.JSONDecodeError):
             json_rpc_error = JSONParseError()
         elif isinstance(e, ValidationError):

@@ -1,6 +1,6 @@
 import httpx
 from httpx_sse import connect_sse
-from typing import Any, AsyncIterable
+from typing import Any, AsyncIterable, Optional
 from rabbithole.a2a.types import (
     AgentCard,
     GetTaskRequest,
@@ -20,13 +20,17 @@ from rabbithole.a2a.types import (
     SendTaskStreamingResponse,
     TaskState,
     Task,
+    TaskSendParams,
+    TaskQueryParams,
+    TaskIdParams,
+    TaskPushNotificationConfig,
 )   
 import json
 import logging
 
 
 class A2AClient:
-    def __init__(self, agent_card: AgentCard = None, url: str = None):
+    def __init__(self, agent_card: Optional[AgentCard] = None, url: Optional[str] = None):
         if agent_card:
             self.url = agent_card.url
         elif url:
@@ -34,12 +38,12 @@ class A2AClient:
         else:
             raise ValueError("Must provide either agent_card or url")
 
-    async def send_task(self, payload: dict[str, Any]) -> SendTaskResponse:
+    async def send_task(self, payload: TaskSendParams) -> SendTaskResponse:
         request = SendTaskRequest(params=payload)
         return SendTaskResponse(**await self._send_request(request))
 
     async def send_task_streaming(
-        self, payload: dict[str, Any]
+        self, payload: TaskSendParams
     ) -> AsyncIterable[SendTaskStreamingResponse]:
         request = SendTaskStreamingRequest(params=payload)
         with httpx.Client(timeout=None) as client:
@@ -68,22 +72,22 @@ class A2AClient:
             except json.JSONDecodeError as e:
                 raise A2AClientJSONError(str(e)) from e
 
-    async def get_task(self, payload: dict[str, Any]) -> GetTaskResponse:
+    async def get_task(self, payload: TaskQueryParams) -> GetTaskResponse:
         request = GetTaskRequest(params=payload)
         return GetTaskResponse(**await self._send_request(request))
 
-    async def cancel_task(self, payload: dict[str, Any]) -> CancelTaskResponse:
+    async def cancel_task(self, payload: TaskIdParams) -> CancelTaskResponse:
         request = CancelTaskRequest(params=payload)
         return CancelTaskResponse(**await self._send_request(request))
 
     async def set_task_callback(
-        self, payload: dict[str, Any]
+        self, payload: TaskPushNotificationConfig
     ) -> SetTaskPushNotificationResponse:
         request = SetTaskPushNotificationRequest(params=payload)
         return SetTaskPushNotificationResponse(**await self._send_request(request))
 
     async def get_task_callback(
-        self, payload: dict[str, Any]
+        self, payload: TaskIdParams
     ) -> GetTaskPushNotificationResponse:
         request = GetTaskPushNotificationRequest(params=payload)
         return GetTaskPushNotificationResponse(**await self._send_request(request))

@@ -1,4 +1,4 @@
-from typing import AsyncIterable
+from typing import AsyncIterable, Optional, List
 from rabbithole.a2a.types import (
     SendTaskRequest,
     TaskSendParams,
@@ -22,11 +22,14 @@ from rabbithole.a2a.types import (
     TaskPushNotificationConfig,
     TaskNotFoundError,
     InvalidParamsError,
+    FilePart,
+    DataPart,
+    Union,
+    TaskResubscriptionRequest,
 )
 from rabbithole.a2a.server.task_manager import InMemoryTaskManager
 from rabbithole.a2a.utils.push_notification_auth import PushNotificationSenderAuth
 import rabbithole.a2a.server.utils as utils
-from typing import Union
 import asyncio
 import logging
 import traceback
@@ -34,6 +37,7 @@ from .agent import OAIAgent
 
 logger = logging.getLogger(__name__)
 
+Part = Union[TextPart, FilePart, DataPart]
 
 class AgentTaskManager(InMemoryTaskManager):
     def __init__(self, agent: OAIAgent, notification_sender_auth: PushNotificationSenderAuth):
@@ -49,34 +53,34 @@ class AgentTaskManager(InMemoryTaskManager):
             async for item in self.agent.stream(query, task_send_params.sessionId):
                 is_task_complete = item["is_task_complete"]
                 require_user_input = item["require_user_input"]
-                artifact = None
-                message = None
-                parts = [{"type": "text", "text": item["content"]}]
+                artifact_obj: Optional[Artifact] = None
+                message_obj: Optional[Message] = None
+                current_parts: List[Part] = [TextPart(type="text", text=item["content"])]
                 end_stream = False
 
                 if not is_task_complete and not require_user_input:
                     task_state = TaskState.WORKING
-                    message = Message(role="agent", parts=parts)
+                    message_obj = Message(role="agent", parts=current_parts)
                 elif require_user_input:
                     task_state = TaskState.INPUT_REQUIRED
-                    message = Message(role="agent", parts=parts)
+                    message_obj = Message(role="agent", parts=current_parts)
                     end_stream = True
                 else:
                     task_state = TaskState.COMPLETED
-                    message = Message(role="agent", parts=parts)   
-                    artifact = Artifact(parts=parts, index=0, append=False)
+                    message_obj = Message(role="agent", parts=current_parts)   
+                    artifact_obj = Artifact(parts=current_parts, index=0, append=False)
                     end_stream = True
-                task_status = TaskStatus(state=task_state, message=message)
+                task_status = TaskStatus(state=task_state, message=message_obj)
                 latest_task = await self.update_store(
                     task_send_params.id,
                     task_status,
-                    None if artifact is None else [artifact],
+                    [artifact_obj] if artifact_obj else [],
                 )
                 await self.send_task_notification(latest_task)
 
-                if artifact:
+                if artifact_obj:
                     task_artifact_update_event = TaskArtifactUpdateEvent(
-                        id=task_send_params.id, artifact=artifact
+                        id=task_send_params.id, artifact=artifact_obj
                     )
                     await self.enqueue_events_for_sse(
                         task_send_params.id, task_artifact_update_event
@@ -100,7 +104,7 @@ class AgentTaskManager(InMemoryTaskManager):
     ) -> JSONRPCResponse | None:
         task_send_params: TaskSendParams = request.params
         if not utils.are_modalities_compatible(
-            task_send_params.acceptedOutputModes, OAIAgent.SUPPORTED_CONTENT_TYPES
+            task_send_params.acceptedOutputModes or [], OAIAgent.SUPPORTED_CONTENT_TYPES
         ):
             logger.warning(
                 "Unsupported output mode. Received %s, Support %s",
@@ -127,7 +131,7 @@ class AgentTaskManager(InMemoryTaskManager):
 
         await self.upsert_task(request.params)
         task = await self.update_store(
-            request.params.id, TaskStatus(state=TaskState.WORKING), None
+            request.params.id, TaskStatus(state=TaskState.WORKING), []
         )
         await self.send_task_notification(task)
 
@@ -183,18 +187,19 @@ class AgentTaskManager(InMemoryTaskManager):
         history_length = task_send_params.historyLength
         task_status = None
 
-        parts = [{"type": "text", "text": agent_response["content"]}]
-        artifact = None
+        agent_response_parts: List[Part] = [TextPart(type="text", text=agent_response["content"])]
+        artifact_obj: Optional[Artifact] = None
+
         if agent_response["require_user_input"]:
             task_status = TaskStatus(
                 state=TaskState.INPUT_REQUIRED,
-                message=Message(role="agent", parts=parts),
+                message=Message(role="agent", parts=agent_response_parts),
             )
         else:
             task_status = TaskStatus(state=TaskState.COMPLETED)
-            artifact = Artifact(parts=parts)
+            artifact_obj = Artifact(parts=agent_response_parts)
         task = await self.update_store(
-            task_id, task_status, None if artifact is None else [artifact]
+            task_id, task_status, [artifact_obj] if artifact_obj else []
         )
         task_result = self.append_task_history(task, history_length)
         await self.send_task_notification(task)
@@ -219,8 +224,8 @@ class AgentTaskManager(InMemoryTaskManager):
         )
 
     async def on_resubscribe_to_task(
-        self, request
-    ) -> AsyncIterable[SendTaskStreamingResponse] | JSONRPCResponse:
+        self, request: TaskResubscriptionRequest
+    ) -> Union[AsyncIterable[SendTaskResponse], JSONRPCResponse]:
         task_id_params: TaskIdParams = request.params
         try:
             sse_event_queue = await self.setup_sse_consumer(task_id_params.id, True)

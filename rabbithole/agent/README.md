@@ -1,12 +1,12 @@
-# Wormhole Agents 
+# RabbitHole Agents 
 
-The `wormhole.a2a` library allows you to build and run agents using various frameworks, including the Google Agent Development Kit (ADK) and OpenAI Agents SDK. We aim to support more agent frameworks in the future—community contributions are welcome!
+The `rabbithole.a2a` library allows you to build and run agents using various frameworks, including the Google Agent Development Kit (ADK) and OpenAI Agents SDK. We aim to support more agent frameworks in the future—community contributions are welcome!
 
 ## Getting Started
 
 ```bash
 # Navigate to the agent sample directory
-cd wormhole/agent/adk
+cd rabbithole/agent/adk
 
 # Create a .env file to store your API credentials
 # You can also add other environment variables if required by your agent
@@ -22,7 +22,7 @@ uv run . --host localhost --port 11011
 
 Step 1: Initialize Files
 ```bash
-cd wormhole/agent
+cd rabbithole/agent
 # Create project
 mkdir example && cd example
 # Create required files

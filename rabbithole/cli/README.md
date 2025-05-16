@@ -14,7 +14,7 @@ The client will use streaming if the server supports it.
 
 1. Navigate to the CLI sample directory:
     ```bash
-    cd wormhole/cli
+    cd rabbithole/cli
     ```
 2. Run the example client
     ```
@@ -22,3 +22,4 @@ The client will use streaming if the server supports it.
     ```
 
    for example `--agent http://localhost:10000`. More command line options are documented in the source code. 
+

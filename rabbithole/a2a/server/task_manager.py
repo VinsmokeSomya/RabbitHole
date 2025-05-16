@@ -154,7 +154,7 @@ class InMemoryTaskManager(TaskManager):
             await self.set_push_notification_info(task_notification_params.id, task_notification_params.pushNotificationConfig)
         except Exception as e:
             logger.error(f"Error while setting push notification info: {e}")
-            return JSONRPCResponse(
+            return SetTaskPushNotificationResponse(
                 id=request.id,
                 error=InternalError(
                     message="An error occurred while setting push notification info"
@@ -190,19 +190,20 @@ class InMemoryTaskManager(TaskManager):
                 task = Task(
                     id=task_send_params.id,
                     sessionId = task_send_params.sessionId,
-                    messages=[task_send_params.message],
                     status=TaskStatus(state=TaskState.SUBMITTED),
                     history=[task_send_params.message],
                 )
                 self.tasks[task_send_params.id] = task
             else:
+                if task.history is None:
+                    task.history = []
                 task.history.append(task_send_params.message)
 
             return task
 
     async def on_resubscribe_to_task(
         self, request: TaskResubscriptionRequest
-    ) -> Union[AsyncIterable[SendTaskStreamingResponse], JSONRPCResponse]:
+    ) -> Union[AsyncIterable[SendTaskResponse], JSONRPCResponse]:
         return new_not_implemented_error(request.id)
 
     async def update_store(
@@ -218,6 +219,8 @@ class InMemoryTaskManager(TaskManager):
             task.status = status
 
             if status.message is not None:
+                if task.history is None:
+                    task.history = []
                 task.history.append(status.message)
 
             if artifacts is not None:
@@ -229,6 +232,9 @@ class InMemoryTaskManager(TaskManager):
 
     def append_task_history(self, task: Task, historyLength: int | None):
         new_task = task.model_copy()
+        if new_task.history is None:
+            new_task.history = []
+
         if historyLength is not None and historyLength > 0:
             new_task.history = new_task.history[-historyLength:]
         else:
@@ -244,7 +250,7 @@ class InMemoryTaskManager(TaskManager):
                 else:
                     self.task_sse_subscribers[task_id] = []
 
-            sse_event_queue = asyncio.Queue(maxsize=0) # <=0 is unlimited
+            sse_event_queue: asyncio.Queue[Any] = asyncio.Queue(maxsize=0) # <=0 is unlimited
             self.task_sse_subscribers[task_id].append(sse_event_queue)
             return sse_event_queue
 
@@ -259,19 +265,68 @@ class InMemoryTaskManager(TaskManager):
 
     async def dequeue_events_for_sse(
         self, request_id, task_id, sse_event_queue: asyncio.Queue
-    ) -> AsyncIterable[SendTaskStreamingResponse] | JSONRPCResponse:
+    ) -> Union[AsyncIterable[SendTaskStreamingResponse], JSONRPCResponse]:
+        # TODO: Error handling, Task Not found etc
+        # TODO: Ensure client has access to this task.
+        # TODO: Handle client disconnection (e.g., if queue.put blocks indefinitely).
+        # TODO: Timeout configuration.
+
+        # Validate if task_id exists
+        async with self.lock:
+            if task_id not in self.tasks:
+                logger.error(f"Task {task_id} not found for SSE streaming.")
+                # It's tricky to return a JSONRPCError here because the headers for SSE are already sent.
+                # The client will simply not receive any events and might time out.
+                # One option is to send a specific error event if the protocol supported it.
+                # For now, we log and the stream will simply end or not start producing.
+                # Consider raising an exception that the calling context (server.py) can catch *before* starting the SSE response.
+                # This depends on when setup_sse_consumer and dequeue_events_for_sse are called relative to HTTP response generation.
+                # For now, we'll assume the check for task existence happens before calling this, or handle it by closing the queue.
+                # This specific error scenario points to a need for robust error signaling within the SSE stream itself if possible.
+                sse_event_queue.put_nowait(None) # Signal end of stream
+                # This yield is to make it an async generator, but it won't be reached if task_id not found.
+                # So the generator will be empty. Client will just disconnect.
+                if False: # mypy trick
+                    yield
+                return # Or raise an error that leads to a non-SSE error response if possible before headers are sent.
+
         try:
-            while True:                
+            while True:
                 event = await sse_event_queue.get()
-                if isinstance(event, JSONRPCError):
-                    yield SendTaskStreamingResponse(id=request_id, error=event)
+                if event is None:  # Sentinel value to signal end of stream
+                    logger.info(f"SSE stream for task {task_id} ended by sentinel.")
                     break
-                                                
-                yield SendTaskStreamingResponse(id=request_id, result=event)
-                if isinstance(event, TaskStatusUpdateEvent) and event.final:
-                    break
+                
+                logger.debug(f"Sending event for task {task_id}: {event}")
+                # Based on the original SendTaskStreamingResponse, event should be TaskStatusUpdateEvent
+                # Ensure that whatever is put into the queue is serializable into SendTaskStreamingResponse
+                if isinstance(event, TaskStatusUpdateEvent):
+                    yield SendTaskStreamingResponse(result=event)
+                elif isinstance(event, JSONRPCError):
+                    # This path may not be robust for SSE, as errors are usually not sent this way mid-stream.
+                    # Client might not handle a JSONRPCError object sent as an SSE event correctly.
+                    # It's better to have a specific event type for errors if needed, e.g., TaskErrorEvent.
+                    yield SendTaskStreamingResponse(error=event) # Or handle error differently
+                else:
+                    # Fallback or error for unexpected event types
+                    logger.error(f"Unknown event type in SSE queue for task {task_id}: {type(event)}")
+                    # Potentially send a generic error event or close stream
+                    yield SendTaskStreamingResponse(error=InternalError(message=f"Unknown event type in SSE queue: {type(event)}"))
+
+                sse_event_queue.task_done()
+        except asyncio.CancelledError:
+            logger.info(f"SSE stream for task {task_id} was cancelled.")
+        except Exception as e:
+            logger.error(f"Error in SSE event loop for task {task_id}: {e}")
+            # Again, sending a JSONRPCError mid-stream might not be ideal for SSE.
+            # Consider how to signal this error to the client if necessary.
+            yield SendTaskStreamingResponse(error=InternalError(message=str(e)))
         finally:
+            logger.info(f"Cleaning up SSE stream for task {task_id}")
+            # Attempt to remove the queue from subscribers list
             async with self.subscriber_lock:
-                if task_id in self.task_sse_subscribers:
+                if task_id in self.task_sse_subscribers and sse_event_queue in self.task_sse_subscribers[task_id]:
                     self.task_sse_subscribers[task_id].remove(sse_event_queue)
+                    if not self.task_sse_subscribers[task_id]: # if list is empty
+                        del self.task_sse_subscribers[task_id]
 
