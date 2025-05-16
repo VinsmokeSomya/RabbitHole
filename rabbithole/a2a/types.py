@@ -100,7 +100,7 @@ class TaskStatusUpdateEvent(BaseModel):
 
 class TaskArtifactUpdateEvent(BaseModel):
     id: str
-    artifact: Artifact    
+    artifact: Artifact
     metadata: dict[str, Any] | None = None
 
 
@@ -235,11 +235,13 @@ A2ARequest_T = Union[
 ]
 
 
-A2ARequest: TypeAdapter[Annotated[A2ARequest_T, Field(discriminator="method")]] = TypeAdapter(
-    Annotated[
-        A2ARequest_T,
-        Field(discriminator="method"),
-    ]
+A2ARequest: TypeAdapter[Annotated[A2ARequest_T, Field(discriminator="method")]] = (
+    TypeAdapter(
+        Annotated[
+            A2ARequest_T,
+            Field(discriminator="method"),
+        ]
+    )
 )
 
 

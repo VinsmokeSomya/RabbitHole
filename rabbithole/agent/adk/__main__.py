@@ -1,20 +1,25 @@
 from rabbithole.a2a.server import A2AServer
-from rabbithole.a2a.types import AgentCard, AgentCapabilities, AgentSkill, MissingAPIKeyError
+from rabbithole.a2a.types import (
+    AgentCard,
+    AgentCapabilities,
+    AgentSkill,
+    MissingAPIKeyError,
+)
 from rabbithole.a2a.utils.push_notification_auth import PushNotificationSenderAuth
 from rabbithole.agent.adk.task_manager import AgentTaskManager
 from rabbithole.agent.adk.agent import ADKAgent
 import click
-import os
 import logging
 from dotenv import load_dotenv
 from pathlib import Path
 
 # Explicitly load .env from the same directory as __main__.py
-dotenv_path = Path(__file__).resolve().parent / '.env'
+dotenv_path = Path(__file__).resolve().parent / ".env"
 load_dotenv(dotenv_path=dotenv_path, override=True)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 @click.command()
 @click.option("--host", "host", default="localhost")
@@ -45,13 +50,17 @@ def main(host, port):
         notification_sender_auth.generate_jwk()
         server = A2AServer(
             agent_card=agent_card,
-            task_manager=AgentTaskManager(agent=ADKAgent(), notification_sender_auth=notification_sender_auth),
+            task_manager=AgentTaskManager(
+                agent=ADKAgent(), notification_sender_auth=notification_sender_auth
+            ),
             host=host,
             port=port,
         )
 
         server.app.add_route(
-            "/.well-known/adk.json", notification_sender_auth.handle_jwks_endpoint, methods=["GET"]
+            "/.well-known/adk.json",
+            notification_sender_auth.handle_jwks_endpoint,
+            methods=["GET"],
         )
 
         logger.info(f"Starting server on {host}:{port}")

@@ -9,27 +9,28 @@ from openai.types.responses import (
     # If we want to handle tool calls specifically, they would be imported here too.
     # e.g., ResponseFileSearchToolCall, ResponseFunctionToolCall, etc.
 )
-from openai.types.beta.threads.messages import MessageTextContentPart, MessageText
+from openai.types.beta.threads.messages import MessageTextContentPart
 
 from agents import Agent, Runner
 
 
 class ResponseFormat(BaseModel):
     """Respond to the user in this format."""
+
     status: Literal["input_required", "completed", "error"] = "input_required"
     message: str
 
+
 class OAIAgent:
-     
     def __init__(self):
         self.agent = Agent(name="Assistant", instructions="You are a helpful assistant")
-        
+
     async def invoke(self, query, sessionId):
         result = await Runner.run(self.agent, query)
         # Assuming result.final_output gives a simple string directly
         # If it's structured like the streaming response, this might need adjustment
         content_to_return = "Agent invocation completed."
-        if hasattr(result, 'final_output') and result.final_output:
+        if hasattr(result, "final_output") and result.final_output:
             # This part is speculative based on typical agent runner patterns.
             # If final_output is already a string, this is fine.
             # If it's complex, needs specific handling.
@@ -39,18 +40,24 @@ class OAIAgent:
                 # Attempt to extract text if final_output is like the streaming output parts
                 try:
                     # This is a guess based on the streaming part. Adjust if invoke() has a different structure.
-                    if isinstance(result.final_output, list) and len(result.final_output) > 0:
+                    if (
+                        isinstance(result.final_output, list)
+                        and len(result.final_output) > 0
+                    ):
                         first_output_part = result.final_output[0]
-                        if hasattr(first_output_part, 'content') and len(first_output_part.content) > 0:
-                            if hasattr(first_output_part.content[0], 'text'):
+                        if (
+                            hasattr(first_output_part, "content")
+                            and len(first_output_part.content) > 0
+                        ):
+                            if hasattr(first_output_part.content[0], "text"):
                                 content_to_return = first_output_part.content[0].text
                 except Exception:
-                    pass # Keep default content_to_return
-       
+                    pass  # Keep default content_to_return
+
         return {
             "is_task_complete": True,
             "require_user_input": False,
-            "content": content_to_return
+            "content": content_to_return,
         }
 
     async def stream(self, query, sessionId) -> AsyncIterable[Dict[str, Any]]:
@@ -61,7 +68,7 @@ class OAIAgent:
                     yield {
                         "is_task_complete": False,
                         "require_user_input": False,
-                        "content": event.data.delta
+                        "content": event.data.delta,
                     }
                 elif isinstance(event.data, ResponseCompletedEvent):
                     response_content = "Agent task completed."
@@ -75,26 +82,34 @@ class OAIAgent:
                                 if first_output_part.content:
                                     first_content_block = first_output_part.content[0]
                                     # Check for MessageTextContentPart for text messages
-                                    if isinstance(first_content_block, MessageTextContentPart):
-                                        response_content = first_content_block.text.value
+                                    if isinstance(
+                                        first_content_block, MessageTextContentPart
+                                    ):
+                                        response_content = (
+                                            first_content_block.text.value
+                                        )
                                     else:
                                         # Handle other content part types if necessary (e.g., image)
                                         response_content = f"[Unhandled content part type: {type(first_content_block).__name__}]"
                                 else:
-                                    response_content = "[Empty content in ResponseOutputMessage]"
+                                    response_content = (
+                                        "[Empty content in ResponseOutputMessage]"
+                                    )
                             else:
                                 response_content = f"[Unhandled output part type: {type(first_output_part).__name__}]"
                         else:
                             response_content = "[Empty output in ResponseOutputText]"
                     elif isinstance(event.data.response, ResponseOutputRefusal):
-                        response_content = event.data.response.refusal or "[Agent refused request]"
+                        response_content = (
+                            event.data.response.refusal or "[Agent refused request]"
+                        )
                     else:
                         response_content = f"[Unhandled response type: {type(event.data.response).__name__}]"
 
                     yield {
                         "is_task_complete": is_complete,
                         "require_user_input": input_required,
-                        "content": response_content
+                        "content": response_content,
                     }
 
     SUPPORTED_CONTENT_TYPES = ["text", "text/plain"]

@@ -2,8 +2,6 @@ from rabbithole.a2a.types import (
     JSONRPCResponse,
     ContentTypeNotSupportedError,
     UnsupportedOperationError,
-    TaskState,
-    Task,
 )
 from typing import List
 

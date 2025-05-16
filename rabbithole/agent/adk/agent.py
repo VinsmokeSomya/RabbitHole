@@ -1,4 +1,4 @@
-import httpx, os
+import os
 from typing import Any, Dict, AsyncIterable, Literal
 from pydantic import BaseModel
 from google.adk import Agent
@@ -12,25 +12,19 @@ from google.adk.runners import Runner
 
 class ResponseFormat(BaseModel):
     """Respond to the user in this format."""
+
     status: Literal["input_required", "completed", "error"] = "input_required"
     message: str
 
+
 class ADKAgent:
-     
     def __init__(self):
         api_key_value = os.environ.get("GOOGLE_API_KEY")
         self.agent = Agent(
             name="Assistant",
-            model=LiteLlm(
-                model="gemini/gemini-1.5-flash",
-                api_key=api_key_value
-            ),
-            description=(
-                "Agent to answer any questions."
-            ),
-            instruction=(
-                "You are a helpful assistant"
-            ),
+            model=LiteLlm(model="gemini/gemini-1.5-flash", api_key=api_key_value),
+            description=("Agent to answer any questions."),
+            instruction=("You are a helpful assistant"),
             tools=[],
         )
 
@@ -47,9 +41,7 @@ class ADKAgent:
         session = self.runner.session_service.get_session(
             app_name=self.agent.name, user_id=self.user_id, session_id=session_id
         )
-        content = types.Content(
-            role="user", parts=[types.Part.from_text(text=query)]
-        )
+        content = types.Content(role="user", parts=[types.Part.from_text(text=query)])
         if session is None:
             session = self.runner.session_service.create_session(
                 app_name=self.agent.name,
@@ -57,30 +49,28 @@ class ADKAgent:
                 state={},
                 session_id=session_id,
             )
-        events = list(self.runner.run(
-            user_id=self.user_id, session_id=session.id, new_message=content
-        ))
+        events = list(
+            self.runner.run(
+                user_id=self.user_id, session_id=session.id, new_message=content
+            )
+        )
 
         if not events or not events[-1].content or not events[-1].content.parts:
-            yield {
-                "is_task_complete": True,
-                "require_user_input": False,
-                "content": ""
-            }
+            yield {"is_task_complete": True, "require_user_input": False, "content": ""}
         else:
             yield {
                 "is_task_complete": True,
                 "require_user_input": False,
-                "content": "\n".join([p.text for p in events[-1].content.parts if p.text])
+                "content": "\n".join(
+                    [p.text for p in events[-1].content.parts if p.text]
+                ),
             }
-    
+
     async def stream(self, query, session_id) -> AsyncIterable[Dict[str, Any]]:
         session = self.runner.session_service.get_session(
             app_name=self.agent.name, user_id=self.user_id, session_id=session_id
         )
-        content = types.Content(
-            role="user", parts=[types.Part.from_text(text=query)]
-        )
+        content = types.Content(role="user", parts=[types.Part.from_text(text=query)])
         if session is None:
             session = self.runner.session_service.create_session(
                 app_name=self.agent.name,
@@ -98,12 +88,17 @@ class ADKAgent:
                     and event.content.parts
                     and event.content.parts[0].text
                 ):
-                    response = "\n".join([p.text for p in event.content.parts if p.text])
+                    response = "\n".join(
+                        [p.text for p in event.content.parts if p.text]
+                    )
                 elif (
                     event.content
                     and event.content.parts
-                    and any([True for p in event.content.parts if p.function_response])):
-                    response = next((p.function_response.model_dump() for p in event.content.parts))
+                    and any([True for p in event.content.parts if p.function_response])
+                ):
+                    response = next(
+                        (p.function_response.model_dump() for p in event.content.parts)
+                    )
                 yield {
                     "is_task_complete": True,
                     "require_user_input": False,

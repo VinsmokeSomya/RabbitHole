@@ -15,12 +15,7 @@ from rabbithole.a2a.types import (
     TaskArtifactUpdateEvent,
     TaskStatusUpdateEvent,
     Task,
-    TaskIdParams,
     PushNotificationConfig,
-    SetTaskPushNotificationRequest,
-    SetTaskPushNotificationResponse,
-    TaskPushNotificationConfig,
-    TaskNotFoundError,
     InvalidParamsError,
     FilePart,
     DataPart,
@@ -39,8 +34,11 @@ logger = logging.getLogger(__name__)
 
 Part = Union[TextPart, FilePart, DataPart]
 
+
 class AgentTaskManager(InMemoryTaskManager):
-    def __init__(self, agent: ADKAgent, notification_sender_auth: PushNotificationSenderAuth):
+    def __init__(
+        self, agent: ADKAgent, notification_sender_auth: PushNotificationSenderAuth
+    ):
         super().__init__()
         self.agent = agent
         self.notification_sender_auth = notification_sender_auth
@@ -48,7 +46,7 @@ class AgentTaskManager(InMemoryTaskManager):
     async def _run_streaming_agent(self, request: SendTaskStreamingRequest):
         task_send_params: TaskSendParams = request.params
         query = self._get_user_query(task_send_params)
-        
+
         try:
             async for item in self.agent.stream(query, task_send_params.sessionId):
                 is_task_complete = item["is_task_complete"]
@@ -69,7 +67,7 @@ class AgentTaskManager(InMemoryTaskManager):
                     task_state = TaskState.COMPLETED
                     artifact_obj = Artifact(parts=parts, index=0, append=False)
                     end_stream = True
-                print('*********', artifact_obj)
+                print("*********", artifact_obj)
                 task_status = TaskStatus(state=task_state, message=message_obj)
                 latest_task = await self.update_store(
                     task_send_params.id,
@@ -84,8 +82,8 @@ class AgentTaskManager(InMemoryTaskManager):
                     )
                     await self.enqueue_events_for_sse(
                         task_send_params.id, task_artifact_update_event
-                    )                    
-                    
+                    )
+
                 task_update_event = TaskStatusUpdateEvent(
                     id=task_send_params.id, status=task_status, final=end_stream
                 )
@@ -97,7 +95,9 @@ class AgentTaskManager(InMemoryTaskManager):
             logger.error(f"An error occurred while streaming the response: {e}")
             await self.enqueue_events_for_sse(
                 task_send_params.id,
-                InternalError(message=f"An error occurred while streaming the response: {e}")                
+                InternalError(
+                    message=f"An error occurred while streaming the response: {e}"
+                ),
             )
 
     def _validate_request(
@@ -113,22 +113,35 @@ class AgentTaskManager(InMemoryTaskManager):
                 ADKAgent.SUPPORTED_CONTENT_TYPES,
             )
             return utils.new_incompatible_types_error(request.id)
-        
-        if task_send_params.pushNotification and not task_send_params.pushNotification.url:
+
+        if (
+            task_send_params.pushNotification
+            and not task_send_params.pushNotification.url
+        ):
             logger.warning("Push notification URL is missing")
-            return JSONRPCResponse(id=request.id, error=InvalidParamsError(message="Push notification URL is missing"))
-        
+            return JSONRPCResponse(
+                id=request.id,
+                error=InvalidParamsError(message="Push notification URL is missing"),
+            )
+
         return None
-        
+
     async def on_send_task(self, request: SendTaskRequest) -> SendTaskResponse:
         """Handles the 'send task' request."""
         validation_error = self._validate_request(request)
         if validation_error:
             return SendTaskResponse(id=request.id, error=validation_error.error)
-        
+
         if request.params.pushNotification:
-            if not await self.set_push_notification_info(request.params.id, request.params.pushNotification):
-                return SendTaskResponse(id=request.id, error=InvalidParamsError(message="Push notification URL is invalid"))
+            if not await self.set_push_notification_info(
+                request.params.id, request.params.pushNotification
+            ):
+                return SendTaskResponse(
+                    id=request.id,
+                    error=InvalidParamsError(
+                        message="Push notification URL is invalid"
+                    ),
+                )
 
         await self.upsert_task(request.params)
         task = await self.update_store(
@@ -138,26 +151,36 @@ class AgentTaskManager(InMemoryTaskManager):
 
         task_send_params: TaskSendParams = request.params
         query = self._get_user_query(task_send_params)
-        
+
         final_agent_response_dict = None
         try:
             # Consume the async generator from agent.invoke()
             async for item in self.agent.invoke(query, task_send_params.sessionId):
-                final_agent_response_dict = item # Take the (presumably only) item
-                break # Assuming invoke for non-streaming should yield one definitive response
-            
+                final_agent_response_dict = item  # Take the (presumably only) item
+                break  # Assuming invoke for non-streaming should yield one definitive response
+
             if final_agent_response_dict is None:
-                logger.error(f"Agent invoke for task {task_send_params.id} yielded no response.")
+                logger.error(
+                    f"Agent invoke for task {task_send_params.id} yielded no response."
+                )
                 # Create a default error-like response if nothing was yielded
-                final_agent_response_dict = {"content": "Agent yielded no response.", "require_user_input": False, "is_task_complete": True}
+                final_agent_response_dict = {
+                    "content": "Agent yielded no response.",
+                    "require_user_input": False,
+                    "is_task_complete": True,
+                }
 
         except Exception as e:
             logger.error(f"Error invoking agent or processing its generator: {e}")
             # Return a SendTaskResponse with an error
-            return SendTaskResponse(id=request.id, error=InternalError(message=f"Error invoking agent: {str(e)}"))
-        
+            return SendTaskResponse(
+                id=request.id,
+                error=InternalError(message=f"Error invoking agent: {str(e)}"),
+            )
+
         return await self._process_agent_response(
-            request, final_agent_response_dict # Now passing a dict
+            request,
+            final_agent_response_dict,  # Now passing a dict
         )
 
     async def on_send_task_subscribe(
@@ -171,11 +194,18 @@ class AgentTaskManager(InMemoryTaskManager):
             await self.upsert_task(request.params)
 
             if request.params.pushNotification:
-                if not await self.set_push_notification_info(request.params.id, request.params.pushNotification):
-                    return JSONRPCResponse(id=request.id, error=InvalidParamsError(message="Push notification URL is invalid"))
+                if not await self.set_push_notification_info(
+                    request.params.id, request.params.pushNotification
+                ):
+                    return JSONRPCResponse(
+                        id=request.id,
+                        error=InvalidParamsError(
+                            message="Push notification URL is invalid"
+                        ),
+                    )
 
             task_send_params: TaskSendParams = request.params
-            sse_event_queue = await self.setup_sse_consumer(task_send_params.id, False)            
+            sse_event_queue = await self.setup_sse_consumer(task_send_params.id, False)
 
             asyncio.create_task(self._run_streaming_agent(request))
 
@@ -201,7 +231,9 @@ class AgentTaskManager(InMemoryTaskManager):
         history_length = task_send_params.historyLength
         task_status = None
 
-        agent_response_parts: List[Part] = [TextPart(type="text", text=agent_response["content"])]
+        agent_response_parts: List[Part] = [
+            TextPart(type="text", text=agent_response["content"])
+        ]
         artifact_obj: Optional[Artifact] = None
 
         if agent_response["require_user_input"]:
@@ -218,13 +250,13 @@ class AgentTaskManager(InMemoryTaskManager):
         task_result = self.append_task_history(task, history_length)
         await self.send_task_notification(task)
         return SendTaskResponse(id=request.id, result=task_result)
-    
+
     def _get_user_query(self, task_send_params: TaskSendParams) -> str:
         part = task_send_params.message.parts[0]
         if not isinstance(part, TextPart):
             raise ValueError("Only text parts are supported")
         return part.text
-    
+
     async def send_task_notification(self, task: Task):
         if not await self.has_push_notification_info(task.id):
             logger.info(f"No push notification info found for task {task.id}")
@@ -233,20 +265,23 @@ class AgentTaskManager(InMemoryTaskManager):
 
         logger.info(f"Notifying for task {task.id} => {task.status.state}")
         await self.notification_sender_auth.send_push_notification(
-            push_info.url,
-            data=task.model_dump(exclude_none=True)
+            push_info.url, data=task.model_dump(exclude_none=True)
         )
 
     async def on_resubscribe_to_task(
         self, request: TaskResubscriptionRequest
     ) -> Union[AsyncIterable[SendTaskResponse], JSONRPCResponse]:
         return new_not_implemented_error(request.id)
-    
-    async def set_push_notification_info(self, task_id: str, push_notification_config: PushNotificationConfig):
+
+    async def set_push_notification_info(
+        self, task_id: str, push_notification_config: PushNotificationConfig
+    ):
         # Verify the ownership of notification URL by issuing a challenge request.
-        is_verified = await self.notification_sender_auth.verify_push_notification_url(push_notification_config.url)
+        is_verified = await self.notification_sender_auth.verify_push_notification_url(
+            push_notification_config.url
+        )
         if not is_verified:
             return False
-        
+
         await super().set_push_notification_info(task_id, push_notification_config)
         return True
