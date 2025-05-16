@@ -21,6 +21,7 @@ from rabbithole.a2a.types import (
     GetTaskResponse,
     SendTaskResponse,
     TaskQueryParams,
+    AgentCard,
 )
 from rabbithole.a2a.utils.push_notification_auth import PushNotificationReceiverAuth
 
@@ -33,21 +34,21 @@ from rabbithole.a2a.utils.push_notification_auth import PushNotificationReceiver
 @click.option("--push_notification_receiver", default="http://localhost:5000")
 async def cli(agent: str, session: str, history: bool, use_push_notifications: bool, push_notification_receiver: str):
     card_resolver = A2ACardResolver(agent_url=agent)
-    card = await card_resolver.get_agent_card()
+    card_obj = await card_resolver.get_agent_card()
 
-    if not card:
+    if not card_obj:
         print(f"Could not resolve agent card from {agent}")
         return
 
     print("======= Agent Card ========")
-    print(card.model_dump_json(exclude_none=True))
+    print(card_obj.model_dump_json(exclude_none=True))
 
     notif_receiver_parsed = urllib.parse.urlparse(push_notification_receiver)
     notification_receiver_host: Optional[str] = notif_receiver_parsed.hostname
     notification_receiver_port: Optional[int] = notif_receiver_parsed.port
 
     if use_push_notifications:
-        if not card.capabilities.pushNotifications:
+        if not card_obj.capabilities.pushNotifications:
             print("Agent does not support push notifications. Ignoring --use_push_notifications.")
             use_push_notifications = False
         elif not notification_receiver_host or not notification_receiver_port:
@@ -55,14 +56,14 @@ async def cli(agent: str, session: str, history: bool, use_push_notifications: b
             use_push_notifications = False
         else:
             from .push_notification_listener import PushNotificationListener
-            agent_base_url = card.url
+            agent_base_url = card_obj.url
             parsed_agent_url = urllib.parse.urlparse(agent_base_url)
             well_known_jwks_url = urllib.parse.urlunparse(
                 (parsed_agent_url.scheme, parsed_agent_url.netloc, "/.well-known/jwks.json", "", "", "")
             )
             jwks_uri_from_card = None
-            if card.authentication:
-                for auth_method in card.authentication:
+            if card_obj.authentication:
+                for auth_method in card_obj.authentication:
                     if auth_method.scheme == AuthenticationScheme.BEARER_TOKEN and auth_method.jwksUrl:
                         jwks_uri_from_card = auth_method.jwksUrl
                         break
@@ -86,7 +87,7 @@ async def cli(agent: str, session: str, history: bool, use_push_notifications: b
             )
             push_notification_listener.start()
         
-    client = A2AClient(agent_card=card)
+    client = A2AClient(agent_card=card_obj)
     current_sessionId: str
     if session == "0":
         current_sessionId = uuid4().hex
@@ -94,13 +95,14 @@ async def cli(agent: str, session: str, history: bool, use_push_notifications: b
         current_sessionId = session
 
     continue_loop = True
-    streaming_supported = card.capabilities.streaming
+    streaming_supported = card_obj.capabilities.streaming
 
     while continue_loop:
         taskId = uuid4().hex
         print("=========  starting a new task ======== ")
         continue_loop = await completeTask(
             client, 
+            card_obj,
             streaming_supported, 
             use_push_notifications, 
             notification_receiver_host, 
@@ -121,6 +123,7 @@ async def cli(agent: str, session: str, history: bool, use_push_notifications: b
 
 async def completeTask(
     client: A2AClient, 
+    card: AgentCard,
     streaming_supported: bool, 
     use_push_notifications: bool, 
     notification_receiver_host: Optional[str], 
@@ -180,7 +183,7 @@ async def completeTask(
     taskResult: Union[GetTaskResponse, SendTaskResponse, None] = None
     
     actual_streaming_to_use = streaming_supported
-    if streaming_supported and card.capabilities.streamingHttpV1alpha is False:
+    if streaming_supported and (not hasattr(card.capabilities, 'streamingHttpV1alpha') or card.capabilities.streamingHttpV1alpha is False):
         print("Agent supports general streaming but not streamingHttpV1alpha. Falling back to non-streaming.")
         actual_streaming_to_use = False
 
@@ -209,6 +212,7 @@ async def completeTask(
         if current_state_val == TaskState.INPUT_REQUIRED:
             return await completeTask(
                 client,
+                card,
                 streaming_supported,
                 use_push_notifications,
                 notification_receiver_host,

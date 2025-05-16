@@ -24,6 +24,7 @@ from rabbithole.a2a.types import (
     InvalidParamsError,
     FilePart,
     DataPart,
+    TaskResubscriptionRequest,
 )
 from rabbithole.a2a.server.task_manager import InMemoryTaskManager
 from rabbithole.a2a.utils.push_notification_auth import PushNotificationSenderAuth
