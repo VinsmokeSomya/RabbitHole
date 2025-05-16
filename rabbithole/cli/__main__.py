@@ -13,18 +13,23 @@ from rabbithole.a2a.types import (
     Task,
     TextPart,
     FilePart,
+    DataPart,
     FileContent,
     Message,
     TaskSendParams,
     PushNotificationConfig,
-    AuthenticationScheme,
+    AuthenticationInfo,
+    AuthenticationSchemeChoice,
     GetTaskResponse,
     SendTaskResponse,
     TaskQueryParams,
     AgentCard,
+    TaskStatusUpdateEvent,
+    TaskArtifactUpdateEvent,
 )
 from rabbithole.a2a.utils.push_notification_auth import PushNotificationReceiverAuth
 
+PartCli = Union[TextPart, FilePart, DataPart]
 
 @click.command()
 @click.option("--agent", default="http://localhost:10000")
@@ -33,8 +38,8 @@ from rabbithole.a2a.utils.push_notification_auth import PushNotificationReceiver
 @click.option("--use_push_notifications", default=False, is_flag=True)
 @click.option("--push_notification_receiver", default="http://localhost:5000")
 async def cli(agent: str, session: str, history: bool, use_push_notifications: bool, push_notification_receiver: str):
-    card_resolver = A2ACardResolver(agent_url=agent)
-    card_obj = await card_resolver.get_agent_card()
+    card_resolver = A2ACardResolver(url=agent)
+    card_obj = card_resolver.get_agent_card()
 
     if not card_obj:
         print(f"Could not resolve agent card from {agent}")
@@ -63,9 +68,9 @@ async def cli(agent: str, session: str, history: bool, use_push_notifications: b
             )
             jwks_uri_from_card = None
             if card_obj.authentication:
-                for auth_method in card_obj.authentication:
-                    if auth_method.scheme == AuthenticationScheme.BEARER_TOKEN and auth_method.jwksUrl:
-                        jwks_uri_from_card = auth_method.jwksUrl
+                for auth_method_info in card_obj.authentication:
+                    if auth_method_info and auth_method_info.scheme == AuthenticationSchemeChoice.BEARER_TOKEN and auth_method_info.jwksUrl:
+                        jwks_uri_from_card = auth_method_info.jwksUrl
                         break
             
             jwks_url_to_use = jwks_uri_from_card or well_known_jwks_url
@@ -78,7 +83,6 @@ async def cli(agent: str, session: str, history: bool, use_push_notifications: b
 
             except Exception as e:
                 print(f"Failed to load JWKS: {e}. Push notifications might not be authenticated correctly.")
-
 
             push_notification_listener = PushNotificationListener(
                 host=cast(str, notification_receiver_host),
@@ -137,7 +141,7 @@ async def completeTask(
     if prompt_text.lower() in [":q", "quit"]:
         return False
     
-    message_parts: List[Union[TextPart, FilePart]] = [TextPart(type="text", text=prompt_text)]
+    message_parts: List[PartCli] = [TextPart(type="text", text=prompt_text)]
     
     file_path = click.prompt(
         "Select a file path to attach? (press enter to skip)",
@@ -177,7 +181,7 @@ async def completeTask(
     if use_push_notifications and notification_receiver_host and notification_receiver_port:
         task_send_params.pushNotification = PushNotificationConfig(
             url=f"http://{notification_receiver_host}:{notification_receiver_port}/notify",            
-            authentication=[AuthenticationScheme.BEARER_TOKEN],
+            authentication=AuthenticationInfo(scheme=AuthenticationSchemeChoice.BEARER_TOKEN)
         )
 
     taskResult: Union[GetTaskResponse, SendTaskResponse, None] = None
@@ -193,7 +197,7 @@ async def completeTask(
             response_stream = client.send_task_streaming(task_send_params)
             async for result_item in response_stream:
                 print(f"stream event => {result_item.model_dump_json(exclude_none=True)}")
-                if result_item.result and result_item.result.final:
+                if result_item.result and isinstance(result_item.result, TaskStatusUpdateEvent) and result_item.result.final:
                     pass 
             taskResult = await client.get_task(TaskQueryParams(id=taskId))
         except Exception as e:

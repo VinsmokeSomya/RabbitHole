@@ -9,7 +9,7 @@ from openai.types.responses import (
     # If we want to handle tool calls specifically, they would be imported here too.
     # e.g., ResponseFileSearchToolCall, ResponseFunctionToolCall, etc.
 )
-from openai.types.beta.threads.runs import TextContentBlock
+from openai.types.beta.threads.messages import MessageTextContentPart, MessageText
 
 from agents import Agent, Runner
 
@@ -73,22 +73,21 @@ class OAIAgent:
                             first_output_part = event.data.response.output[0]
                             if isinstance(first_output_part, ResponseOutputMessage):
                                 if first_output_part.content:
-                                    # Content is a list, usually of TextContentBlock for text
                                     first_content_block = first_output_part.content[0]
-                                    if isinstance(first_content_block, TextContentBlock):
+                                    # Check for MessageTextContentPart for text messages
+                                    if isinstance(first_content_block, MessageTextContentPart):
                                         response_content = first_content_block.text.value
                                     else:
-                                        response_content = "[Non-text content received]"
+                                        # Handle other content part types if necessary (e.g., image)
+                                        response_content = f"[Unhandled content part type: {type(first_content_block).__name__}]"
                                 else:
                                     response_content = "[Empty content in ResponseOutputMessage]"
                             else:
-                                # Handle other output part types if necessary (e.g. tool calls)
                                 response_content = f"[Unhandled output part type: {type(first_output_part).__name__}]"
                         else:
                             response_content = "[Empty output in ResponseOutputText]"
                     elif isinstance(event.data.response, ResponseOutputRefusal):
                         response_content = event.data.response.refusal or "[Agent refused request]"
-                        # is_complete might depend on how refusals are handled, usually they are final.
                     else:
                         response_content = f"[Unhandled response type: {type(event.data.response).__name__}]"
 

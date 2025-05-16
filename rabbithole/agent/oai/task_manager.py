@@ -30,6 +30,7 @@ from rabbithole.a2a.types import (
 from rabbithole.a2a.server.task_manager import InMemoryTaskManager
 from rabbithole.a2a.utils.push_notification_auth import PushNotificationSenderAuth
 import rabbithole.a2a.server.utils as utils
+from rabbithole.a2a.server.utils import new_not_implemented_error
 import asyncio
 import logging
 import traceback

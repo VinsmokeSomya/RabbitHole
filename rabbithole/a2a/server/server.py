@@ -55,16 +55,18 @@ class A2AServer:
             raise ValueError("agent_card is not defined")
 
         if self.task_manager is None:
-            raise ValueError("request_handler is not defined")
+            raise ValueError("task_manager is not defined")
 
         import uvicorn
 
         uvicorn.run(self.app, host=self.host, port=self.port)
 
     def _get_agent_card(self, request: Request) -> JSONResponse:
+        assert self.agent_card is not None, "agent_card must be set before starting the server."
         return JSONResponse(self.agent_card.model_dump(exclude_none=True))
 
     async def _process_request(self, request: Request):
+        assert self.task_manager is not None, "task_manager must be set before starting the server."
         try:
             body = await request.json()
             json_rpc_request = A2ARequest.validate_python(body)

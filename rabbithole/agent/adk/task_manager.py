@@ -33,6 +33,7 @@ import asyncio
 import logging
 import traceback
 from .agent import ADKAgent
+from rabbithole.a2a.server.utils import new_not_implemented_error
 
 logger = logging.getLogger(__name__)
 
@@ -239,18 +240,7 @@ class AgentTaskManager(InMemoryTaskManager):
     async def on_resubscribe_to_task(
         self, request: TaskResubscriptionRequest
     ) -> Union[AsyncIterable[SendTaskResponse], JSONRPCResponse]:
-        task_id_params: TaskIdParams = request.params
-        try:
-            sse_event_queue = await self.setup_sse_consumer(task_id_params.id, True)
-            return self.dequeue_events_for_sse(request.id, task_id_params.id, sse_event_queue)
-        except Exception as e:
-            logger.error(f"Error while reconnecting to SSE stream: {e}")
-            return JSONRPCResponse(
-                id=request.id,
-                error=InternalError(
-                    message=f"An error occurred while reconnecting to stream: {e}"
-                ),
-            )
+        return new_not_implemented_error(request.id)
     
     async def set_push_notification_info(self, task_id: str, push_notification_config: PushNotificationConfig):
         # Verify the ownership of notification URL by issuing a challenge request.
