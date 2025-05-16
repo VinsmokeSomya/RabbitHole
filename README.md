@@ -18,10 +18,10 @@
 - [🛠️ Installation](#installation)
   - [💡 What is UV?](#what-is-uv)
 - [⚡ A2A Agents Unleashed](#a2a-agents-unleashed)
-  - [Prerequisites 📋](#prerequisites-)
+  - [Prerequisites 📋](#prerequisites)
   - [🚀 Quick Start Guide](#quick-start-guide)
 - [🐳 Running with Docker](#running-with-docker)
-  - [Prerequisites](#prerequisites)
+  - [Prerequisites](#prerequisites-1)
   - [Building the Docker Image](#building-the-docker-image)
   - [Running the Docker Container](#running-the-docker-container)
 - [🗺️ Project Structure](#project-structure)
@@ -266,3 +266,7 @@ We're actively expanding support for other agent frameworks and cool features! I
 *   Start a Discussion
 
 Your contributions are highly welcome!
+
+## 📝 License
+
+This project is licensed under the [MIT License](LICENSE).
