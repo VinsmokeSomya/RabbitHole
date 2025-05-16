@@ -1,4 +1,4 @@
-from typing import Union, Any
+from typing import Union, Any, TypeVar, Generic
 from pydantic import BaseModel, Field, TypeAdapter
 from typing import Literal, List, Annotated, Optional
 from datetime import datetime
@@ -117,41 +117,21 @@ class PushNotificationConfig(BaseModel):
     authentication: AuthenticationInfo | None = None
 
 
-class TaskIdParams(BaseModel):
-    id: str
-    metadata: dict[str, Any] | None = None
+TaskIdParams = TypeVar("TaskIdParams")
+TaskQueryParams = TypeVar("TaskQueryParams")
+TaskSendParams = TypeVar("TaskSendParams")
+TaskPushNotificationConfig = TypeVar("TaskPushNotificationConfig")
 
-
-class TaskQueryParams(TaskIdParams):
-    historyLength: int | None = None
-
-
-class TaskSendParams(BaseModel):
-    id: str
-    sessionId: str = Field(default_factory=lambda: uuid4().hex)
-    message: Message
-    acceptedOutputModes: Optional[List[str]] = None
-    pushNotification: PushNotificationConfig | None = None
-    historyLength: int | None = None
-    metadata: dict[str, Any] | None = None
-
-
-class TaskPushNotificationConfig(BaseModel):
-    id: str
-    pushNotificationConfig: PushNotificationConfig
-
-
-## RPC Messages
-
+P = TypeVar("P")
 
 class JSONRPCMessage(BaseModel):
     jsonrpc: Literal["2.0"] = "2.0"
     id: int | str | None = Field(default_factory=lambda: uuid4().hex)
 
 
-class JSONRPCRequest(JSONRPCMessage):
+class JSONRPCRequest(JSONRPCMessage, Generic[P]):
     method: str
-    params: dict[str, Any] | None = None
+    params: P
 
 
 class JSONRPCError(BaseModel):
@@ -165,7 +145,7 @@ class JSONRPCResponse(JSONRPCMessage):
     error: JSONRPCError | None = None
 
 
-class SendTaskRequest(JSONRPCRequest):
+class SendTaskRequest(JSONRPCRequest[TaskSendParams]):
     method: Literal["tasks/send"] = "tasks/send"
     params: TaskSendParams
 
@@ -174,7 +154,7 @@ class SendTaskResponse(JSONRPCResponse):
     result: Task | None = None
 
 
-class SendTaskStreamingRequest(JSONRPCRequest):
+class SendTaskStreamingRequest(JSONRPCRequest[TaskSendParams]):
     method: Literal["tasks/sendSubscribe"] = "tasks/sendSubscribe"
     params: TaskSendParams
 
@@ -183,7 +163,7 @@ class SendTaskStreamingResponse(JSONRPCResponse):
     result: TaskStatusUpdateEvent | TaskArtifactUpdateEvent | None = None
 
 
-class GetTaskRequest(JSONRPCRequest):
+class GetTaskRequest(JSONRPCRequest[TaskQueryParams]):
     method: Literal["tasks/get"] = "tasks/get"
     params: TaskQueryParams
 
@@ -192,7 +172,7 @@ class GetTaskResponse(JSONRPCResponse):
     result: Task | None = None
 
 
-class CancelTaskRequest(JSONRPCRequest):
+class CancelTaskRequest(JSONRPCRequest[TaskIdParams]):
     method: Literal["tasks/cancel",] = "tasks/cancel"
     params: TaskIdParams
 
@@ -201,7 +181,7 @@ class CancelTaskResponse(JSONRPCResponse):
     result: Task | None = None
 
 
-class SetTaskPushNotificationRequest(JSONRPCRequest):
+class SetTaskPushNotificationRequest(JSONRPCRequest[TaskPushNotificationConfig]):
     method: Literal["tasks/pushNotification/set",] = "tasks/pushNotification/set"
     params: TaskPushNotificationConfig
 
@@ -210,7 +190,7 @@ class SetTaskPushNotificationResponse(JSONRPCResponse):
     result: TaskPushNotificationConfig | None = None
 
 
-class GetTaskPushNotificationRequest(JSONRPCRequest):
+class GetTaskPushNotificationRequest(JSONRPCRequest[TaskIdParams]):
     method: Literal["tasks/pushNotification/get",] = "tasks/pushNotification/get"
     params: TaskIdParams
 
@@ -219,7 +199,7 @@ class GetTaskPushNotificationResponse(JSONRPCResponse):
     result: TaskPushNotificationConfig | None = None
 
 
-class TaskResubscriptionRequest(JSONRPCRequest):
+class TaskResubscriptionRequest(JSONRPCRequest[TaskIdParams]):
     method: Literal["tasks/resubscribe",] = "tasks/resubscribe"
     params: TaskIdParams
 
