@@ -28,6 +28,8 @@ jobs:
       run: |
         source .venv/bin/activate
         uv pip install -e ".[dev]"
+        echo "--- Explicitly installing mypy --- "
+        uv pip install mypy # Add explicit install for mypy
     - name: Linting and Formatting Checks
       shell: bash # Use bash to ensure venv is active for these commands
       run: |
