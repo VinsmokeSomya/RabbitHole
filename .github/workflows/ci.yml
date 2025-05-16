@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: write # Allow a GITHUB_TOKEN to push to the repository
+
 env:
   PYTHON_VERSION: '3.10' # Matches Dockerfile Python version
   UV_VERSION: '0.1.40'   # Specify a version for uv
