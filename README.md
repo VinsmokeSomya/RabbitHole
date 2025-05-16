@@ -287,8 +287,6 @@ We're actively expanding support for other agent frameworks and cool features! I
 
 Your contributions are highly welcome!
 
-<<<<<<< Updated upstream
-=======
 ## 🎨 Using the Streamlit UI
 
 RabbitHole also includes a basic Streamlit web UI to interact with your agents.
@@ -318,7 +316,6 @@ streamlit run rabbithole/ui/streamlit_app.py
 
 This will start the Streamlit application, and it should open in your web browser. You can then configure the Agent Server URL in the sidebar (default is `http://localhost:10000`) and start chatting with your agent.
 
->>>>>>> Stashed changes
 ## 📝 License
 
 This project is licensed under the [MIT License](LICENSE).
