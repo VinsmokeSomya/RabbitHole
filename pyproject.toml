@@ -1,0 +1,62 @@
+# Core project metadata
+[project]
+name = "rabbithole"
+version = "0.1.0"
+description = "Agent2Agent Protocol - An open protocol enabling communication between AI agents"
+# Requires Python 3.10 or higher
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" } # SPDX identifier for Apache 2.0
+
+# Project authors - can be a list of tables
+authors = [
+    { name = "RabbitHole Maintainers", email = "your_email@example.com" } # Changed author
+]
+
+# Main project dependencies
+dependencies = [
+    "httpx>=0.27.2",
+    "httpx-sse>=0.4.0",
+    "jwcrypto>=1.5.6",
+    "pydantic>=2.10.6",
+    "pyjwt>=2.10.1",
+    "sse-starlette>=2.2.1",
+    "starlette>=0.46.1",
+    "typing-extensions>=4.12.2",
+    "uvicorn>=0.34.0",
+    "click>=8.1.8",
+    "python-dotenv>=1.1.0",
+    "openai",
+    "openai-agents",
+    "google-adk==0.4.0",
+    "asyncclick",
+    "litellm",
+    "google-genai"
+]
+
+# Optional dependencies - grouped by purpose
+[project.optional-dependencies]
+# For OpenAI specific agent functionality
+oai = ["openai","openai-agents"]
+# For Google ADK specific agent functionality
+adk = ["google-adk==0.4.0", "litellm"]
+# Development and testing tools
+dev = [
+    "pytest>=8.3.5", 
+    "pytest-mock>=3.14.0", 
+    "ruff>=0.11.2"
+]
+
+# Project URLs
+[project.urls]
+Homepage = "https://github.com/VinsmokeSomya/RabbitHole" # Updated to your repo
+Documentation = "https://github.com/VinsmokeSomya/RabbitHole" # Updated to your repo
+
+# Build system configuration (using Hatchling)
+[build-system]
+requires = ["hatchling"] # Specifies Hatchling as the build tool
+build-backend = "hatchling.build"
+
+# Hatch build configuration
+[tool.hatch.build.targets.wheel]
+# Specifies the package directory to include in the wheel
+packages = ["rabbithole"]

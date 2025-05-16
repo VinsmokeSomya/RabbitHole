@@ -1,0 +1,40 @@
+# Python specific
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+.Python
+env/
+venv/
+.venv/
+
+# Git specific
+.git/
+
+# IDE / Editor specific
+.vscode/
+.idea/
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Build artifacts / Distribution
+build/
+dist/
+*.egg-info/
+
+# Logs and databases (if any, adjust as needed)
+*.log
+*.sqlite3
+
+# Local environment files - should be passed via -e in docker run
+.env
+*/.env
+*/**/.env
+
+# Docker related (to avoid copying Dockerfile itself if context is .)
+Dockerfile
+.dockerignore 
