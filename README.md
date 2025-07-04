@@ -8,320 +8,113 @@
   <h1 style="border-bottom: none;">
     🐇 RabbitHole 🕳️
   </h1>
+  <p>Build, host, and orchestrate AI agents with ease.</p>
 </div>
+
 <p align="center" width="100%">
   <img src="assets/logo.png" alt="RabbitHole Logo" width="200"/>
 </p>
 
-**RabbitHole** 🌀 wraps Google's official [A2A](https://github.com/google/A2A) repository with a developer-friendly layer that:
+<!-- Badges -->
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/VinsmokeSomya/RabbitHole?style=for-the-badge" alt="License"></a>
+  <a href="https://github.com/VinsmokeSomya/RabbitHole/stargazers"><img src="https://img.shields.io/github/stars/VinsmokeSomya/RabbitHle?style=for-the-badge&logo=github" alt="Stars"></a>
+  <a href="https://github.com/VinsmokeSomya/RabbitHole/issues"><img src="https://img.shields.io/github/issues/VinsmokeSomya/RabbitHole?style=for-the-badge" alt="Issues"></a>
+  <img src="https://img.shields.io/badge/Python-3.11+-blue.svg?style=for-the-badge&logo=python" alt="Python Version">
+</p>
 
-📦 Minimal code to spin up an **A2A Agent**  
-⚡ Keeps in lock-step with upstream **Google A2A** releases  
-🌱 Adds plug-ins for **Google ADK**, **OpenAI Agents SDK**, **MCP**, and more on the way!
+**RabbitHole** is a developer-first framework for building and orchestrating LLM-powered agents. It simplifies the complexity of agent-to-agent communication, allowing you to focus on building powerful, intelligent applications.
 
-## 📜 Table of Contents
+Inspired by giants like **LangChain**, our vision is to create a comprehensive, interoperable ecosystem where agents built on different platforms can communicate and collaborate seamlessly.
 
-- [🛠️ Installation](#installation)
-  - [💡 What is UV?](#what-is-uv)
-- [⚡ A2A Agents Unleashed](#a2a-agents-unleashed)
-  - [Prerequisites 📋](#prerequisites)
-  - [🚀 Quick Start Guide](#quick-start-guide)
-- [🐳 Running with Docker](#running-with-docker)
-  - [Prerequisites](#prerequisites-1)
-  - [Building the Docker Image](#building-the-docker-image)
-  - [Running the Docker Container](#running-the-docker-container)
-- [🗺️ Project Structure](#project-structure)
-- [🔄 Project Workflow Diagram](#project-workflow-diagram)
-- [🤝 Contributing](#contributing)
-- [📝 License](#license)
-- [🎨 Using the Streamlit UI](#using-the-streamlit-ui)
+## 🤔 Why RabbitHole?
 
-## 🛠️ Installation
+Building AI agents involves more than just writing prompts. You need to handle server setup, communication protocols, and task management. RabbitHole abstracts away this boilerplate, providing a robust foundation for your agent applications.
 
+Use RabbitHole for:
+*   **Standardized Communication**: Built on Google's A2A protocol, RabbitHole ensures your agents speak a common language, making them interoperable by design.
+*   **Rapid Development**: Get an agent server running with minimal code. Our framework provides the structure, so you can focus on your agent's unique logic.
+*   **Extensible by Design**: With a plug-in architecture, RabbitHole makes it easy to integrate agents from different providers. We currently support Google's ADK and OpenAI's Agent SDK, with more on the way.
+*   **Integrated Tooling**: Comes with a built-in CLI and a Streamlit UI for easy testing and interaction with your agents right out of the box.
 
-#### 1. Clone the RabbitHole repository 🐾
+## 🚀 Getting Started
+
+### Installation
+
+Get started by installing RabbitHole directly from the source. We recommend using a virtual environment.
+
 ```bash
+# 1. Clone the repo
 git clone https://github.com/VinsmokeSomya/RabbitHole.git
+
 cd RabbitHole
-```
 
-#### 2. Create a virtual environment and install dependencies ➕🐍
+# 2. Create a virtual environment and activate it
+# We recommend `uv`, but Python's venv works great too.
+python -m venv .venv
 
-```bash
-# (Using uv, a fast Python package installer and resolver)
-uv venv
-```
-
-```bash
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# 3. Install in editable mode with all dev dependencies
+pip install -e ".[dev]"
 ```
 
-```bash
-uv pip install -e ".[dev]"  # Editable install + development extras
-```
+### Run Your First Agent
 
-### 💡 What is UV?
-UV is a modern Python package management tool that's significantly faster than pip and pip-tools. Learn more and install it from [astral.sh/uv](https://astral.sh/uv).
-If you don't have `uv` installed:
+Let's run the pre-built Google ADK agent.
 
-```bash
-# For Linux/macOS
-curl -LsSf https://astral.sh/uv/install.sh | sh
-# For Windows, check https://astral.sh/uv/install for instructions.
-```
+**1. Set up your API Key:**
+Navigate to `rabbithole/agent/adk/`, copy `.env.template` to `.env`, and add your Google API key.
 
-```bash
-# Verify installation
-uv --version
-```
-
-## ⚡ A2A Agents Unleashed
-
-The ```rabbithole.a2a``` library allows you to build and run agents using various frameworks, including:
-- Google Agent Development Kit (ADK) 🤖
-- OpenAI Agents SDK 🧠
-
-We aim to support more agent frameworks in the future—community contributions are welcome! 🤝
-
-### Prerequisites 📋
-
-*   Python 3.9+ 🐍
-*   UV Package Manager (or pip, see alternative setup)
-*   Access to a compatible LLM and a valid API key (e.g., Google API key for Gemini) 🔑
-
-### 🚀 Quick Start Guide
-
-#### Step 1: Navigate to an Agent Sample Directory 📁
-Let's pick the Google ADK agent for this example:
 ```bash
 cd rabbithole/agent/adk
-```
 
-#### Step 2: Set Up Your Environment 🔑
-For the ADK agent, navigate to `rabbithole/agent/adk/`. You will find a file named `.env.template`.
-Copy this file to a new file named `.env` in the *same directory* (`rabbithole/agent/adk/`).
-
-```bash
-# Inside the rabbithole/agent/adk/ directory:
 cp .env.template .env
+# Now, edit .env to add your key
 ```
 
-Then, open the newly created `.env` file and replace `your_actual_google_api_key_here` with your actual Google API Key:
-
-```env
-# Contents of rabbithole/agent/adk/.env
-GOOGLE_API_KEY=AIzaSyXXXXXXXXXX...
-```
-*Note: The ADK agent currently uses the `gemini/gemini-1.5-flash` model. This can be changed in `rabbithole/agent/adk/agent.py` if needed.*
-
-You can also add other environment variables if required by your agent (e.g., for other LLM providers).
-
-#### Step 3: Launch the Agent Server 📡
-From the agent directory (e.g., `rabbithole/agent/adk`):
+**2. Launch the Agent Server:**
+From the `rabbithole/agent/adk` directory, run:
 ```bash
-# Default host (localhost) and port (e.g., 10000 for ADK agent)
-uv run . 
-# Or python __main__.py if not using uv
+python __main__.py
 ```
+The agent is now live on `http://localhost:10000`.
 
-To specify a custom host and port:
+**3. Talk to Your Agent (from a new terminal):**
+Navigate to the CLI directory and start the client.
 ```bash
-uv run . --host localhost --port 11011
-# Or python __main__.py --host localhost --port 11011
-```
-📝 *Make sure to note the port if you override it—it will be needed by the A2A client.*
+# In a new terminal, from the project root
+cd ../../cli
 
-#### Step 4: Start the A2A CLI Client in a New Terminal 💻
-Navigate to the CLI directory:
-```bash
-cd rabbithole/cli
-```
-Run the client, connecting to the agent server's port:
-```bash
-# Replace YOUR_PORT with the correct agent server port (e.g., 10000 or 11011)
-uv run . --agent http://localhost:YOUR_PORT
-```
-Or
-
-```bash
-python __main__.py --agent http://localhost:YOUR_PORT
-```
-Example:
-```bash
-uv run . --agent http://localhost:10000
-```
-🎉 You should now be able to interact with your agent!
-
-## 🐳 Running with Docker
-
-You can also run the RabbitHole agent server (specifically the ADK agent for this example) using Docker. This provides a containerized environment for your application.
-
-### Prerequisites
-
-*   **Docker Installed**: Ensure Docker Desktop (for Windows/Mac) or Docker Engine (for Linux) is installed and running on your system. You can find installation instructions at [docker.com](https://www.docker.com/get-started).
-
-### Building the Docker Image
-
-A `Dockerfile` is provided in the project root to build an image for the ADK agent server.
-
-1.  **Navigate to the project root directory** (where the `Dockerfile` is located) in your terminal.
-2.  **Build the image** by running:
-    ```bash
-    docker build -t rabbithole-adk-agent .
-    ```
-    *   `-t rabbithole-adk-agent`: Tags the image with the name `rabbithole-adk-agent` for easy reference.
-    *   `.`: Specifies the current directory as the build context (where Docker looks for the `Dockerfile` and project files).
-
-### Running the Docker Container
-
-Once the image is built, you can run a container from it:
-
-```bash
-docker run --rm -it -e GOOGLE_API_KEY="YOUR_ACTUAL_GOOGLE_API_KEY" -p 10000:10000 rabbithole-adk-agent
-```
-
-Let's break down this command:
-*   `docker run`: The command to start a new container.
-*   `--rm`: Automatically removes the container when it stops. This is useful for cleanup.
-*   `-it`: Runs the container in interactive mode and allocates a pseudo-TTY, allowing you to see the server logs and stop it with `Ctrl+C`.
-*   `-e GOOGLE_API_KEY="YOUR_ACTUAL_GOOGLE_API_KEY"`: This is **crucial**. It sets the `GOOGLE_API_KEY` environment variable inside the container. Replace `"YOUR_ACTUAL_GOOGLE_API_KEY"` with your real Google API key. The agent server running inside the container (which loads its key from the environment) will use this key.
-*   `-p 10000:10000`: Maps port `10000` on your host machine to port `10000` inside the container. The ADK agent server in the Docker image is configured to run on port `10000` (see `Dockerfile` `AGENT_PORT` and `CMD`).
-*   `rabbithole-adk-agent`: The name of the Docker image to run.
-
-After running this command, the ADK agent server should be running inside the Docker container, and you should see its logs in your terminal.
-
-**Connecting the CLI Client to the Dockerized Server:**
-
-Your local CLI client (from `rabbithole/cli/`) can then connect to this Dockerized agent server using the address `http://localhost:10000` (since port 10000 on your host is mapped to the container's port 10000).
-
-```bash
-# From your local rabbithole/cli directory, after activating your local venv
 python __main__.py --agent http://localhost:10000
-# Or using uv, if you prefer:
-# uv run . --agent http://localhost:10000
 ```
+You're now chatting with your first agent! For more detailed instructions, check out **[How to Run and Test](./docs/howto.md)**.
 
-## 🗺️ Project Structure
+## 📚 Documentation
 
-Here's a glimpse into the RabbitHole 🐇🕳️:
-```ascii
-RabbitHole/
-├── .git/               # Git version control files
-├── .venv/              # Python virtual environment (e.g., created by `uv venv`)
-├── assets/             # Logos, images, etc.
-│   └── logo.png
-├── rabbithole/         # <--- Your main Python package!
-│   ├── __init__.py
-│   ├── a2a/            # Core Agent-to-Agent (A2A) protocol implementation
-│   │   ├── __init__.py
-│   │   ├── client/     # A2A client logic (connecting to agents)
-│   │   │   ├── __init__.py
-│   │   │   ├── card_resolver.py
-│   │   │   └── client.py
-│   │   ├── server/     # A2A server logic (hosting agents)
-│   │   │   ├── __init__.py
-│   │   │   ├── server.py
-│   │   │   ├── task_manager.py
-│   │   │   └── utils.py
-│   │   ├── types.py    # A2A data types, Pydantic models, and schemas
-│   │   └── utils/      # Shared utilities for A2A (e.g., auth)
-│   │       ├── __init__.py
-│   │       └── push_notification_auth.py
-│   ├── agent/          # Specific agent implementations
-│   │   ├── __init__.py
-│   │   ├── adk/        # Google ADK based agent example
-│   │   │   ├── __init__.py
-│   │   │   ├── __main__.py  (Runnable ADK agent server 🚀)
-│   │   │   ├── agent.py     (ADK agent core logic)
-│   │   │   └── task_manager.py
-│   │   └── oai/        # OpenAI based agent example
-│   │       ├── __init__.py
-│   │       ├── __main__.py  (Runnable OpenAI agent server 🚀)
-│   │       ├── agent.py     (OpenAI agent core logic)
-│   │       └── task_manager.py
-│   └── cli/            # Command Line Interface (CLI) to interact with agents
-│       ├── __init__.py
-│       ├── __main__.py      (Runnable CLI client 💻)
-│       └── push_notification_listener.py
-├── .gitignore          # Files and directories ignored by Git
-├── pyproject.toml      # Project metadata, dependencies, build config (PEP 518)
-├── README.md           # You are here! 👋
-└── uv.lock             # Lock file for deterministic dependencies (uv)
-```
+Dive deeper into the RabbitHole ecosystem with our comprehensive guides:
 
-## 🔄 Project Workflow Diagram
+- **[User & Contributor Guide](./docs/documentation.md)**: For getting started, core concepts, and contributing.
+- **[Software Architecture](./docs/architecture.md)**: A technical deep-dive into the system's design.
+- **[Developer Guide](./DEV-README.md)**: Everything you need to know to contribute code.
 
-Visualizing the Agent Interaction Flow:
+## 🗺️ Project Vision & Roadmap
 
-```ascii
+Our goal is to evolve RabbitHole into a leading framework for AI agent development, on par with industry standards like LangChain and LlamaIndex.
 
-  +----------------------+      +--------------------------------+      +-----------------------+
-  | 👤 User via CLI      | ---> | 🐇 RabbitHole Agent Server    | ---> | 🧠 LLM (e.g., Gemini) | 
-  | (rabbithole/cli)     | <--- | (rabbithole/agent/adk or /oai) | <--- | (generative AI)       |
-  +----------------------+      +--------------------------------+      +-----------------------+
-          ^        \                                 ^
-          |         \ (Optional Push Notifications)  | (A2A Protocol)
-          |          \                               |
-          |           V                              |
-          |  +----------------------------+          |
-          |  | Push Notification Listener |          |
-          |  | (within CLI client)        |          |
-          |  +----------------------------+          |
-          |                                          |
-          +---- Task Responses & Updates <-----------+ 
-
-```
-**Key Workflow Steps:**
-
-1.  ▶️ **User Interaction**: User sends a prompt or command through the `CLI Client`.
-2.  ↪️ **Request Forwarding**: The `CLI Client` packages this as an A2A request and sends it to the active `RabbitHole Agent Server` (e.g., ADK agent).
-3.  ⚙️ **Server Processing**: The `Agent Server`:
-    *   Receives the task.
-    *   Interacts with the configured `LLM` (like Google Gemini) for language understanding and generation.
-    *   Manages the task lifecycle (e.g., using its `task_manager.py`).
-    *   May use specific agent logic from its `agent.py`.
-4.  ↩️ **Response Delivery**: The `Agent Server` sends the LLM's response (or streams updates) back to the `CLI Client` via the A2A protocol.
-5.  🔔 **Push Notifications (Optional)**: If configured:
-    *   The `Agent Server` can send asynchronous updates (push notifications) to a URL provided by the client.
-    *   The `Push Notification Listener` (running as part of the CLI or a separate client-side service) receives these updates.
+Our roadmap includes:
+- [ ] **Expanded Agent Support**: Integrating more agent SDKs (e.g., from Anthropic, Cohere).
+- [ ] **Tool and Function Calling**: Standardized interfaces for agents to use external tools.
+- [ ] **Agent Orchestration**: Building complex, multi-agent workflows (similar to LangGraph).
+- [ ] **Memory and State Management**: Providing built-in solutions for long-term agent memory.
+- [ ] **Deployment Solutions**: Simplified deployment to cloud platforms.
 
 ## 🤝 Contributing
 
-We're actively expanding support for other agent frameworks and cool features! If you're interested in contributing 🧑‍💻, adding custom tools 🛠️, or have ideas 💡, feel free to:
-*   Open a Pull Request
-*   Start a Discussion
+RabbitHole is an open-source project, and we welcome contributions from the community! Whether it's adding a new agent integration, improving documentation, or fixing a bug, your help is valued.
 
-Your contributions are highly welcome!
-
-## 🎨 Using the Streamlit UI
-
-RabbitHole also includes a basic Streamlit web UI to interact with your agents.
-
-**Prerequisites:**
-
-1.  Ensure your agent server (e.g., the ADK agent) is running. See the [Quick Start Guide](#quick-start-guide) or [Running with Docker](#running-with-docker) sections.
-2.  Make sure you have installed the necessary dependencies. If you installed with `.[dev]`, Streamlit should be included. Otherwise, ensure Streamlit is installed in your environment:
-    ```bash
-    # If you haven't installed all extras, you might need:
-    pip install streamlit
-    ```
-
-    
-    #### or with uv
-    ```bash
-    uv pip install streamlit
-    ```
-
-**Running the UI:**
-
-Navigate to the project root directory and run the following command in your terminal (ensure your virtual environment is activated):
-
-```bash
-streamlit run rabbithole/ui/streamlit_app.py
-```
-
-This will start the Streamlit application, and it should open in your web browser. You can then configure the Agent Server URL in the sidebar (default is `http://localhost:10000`) and start chatting with your agent.
+Please read our **[Developer Guide](./DEV-README.md)** to get started.
 
 ## 📝 License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the [MIT License](./LICENSE).

@@ -9,7 +9,7 @@ license = { text = "Apache-2.0" } # SPDX identifier for Apache 2.0
 
 # Project authors - can be a list of tables
 authors = [
-    { name = "RabbitHole Maintainers", email = "your_email@example.com" } # Changed author
+    { name = "VinsmokeSomya", email = "somyadxdalavi007@gmail.com" }
 ]
 
 # Main project dependencies
@@ -32,7 +32,8 @@ dependencies = [
     "asyncclick~=8.1.8",
     "litellm>=1.36.0",
     "google-generativeai>=0.5.0",
-    "streamlit>=1.33.0"
+    "streamlit>=1.33.0",
+    "deprecated"
 ]
 
 # Optional dependencies - grouped by purpose
