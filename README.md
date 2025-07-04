@@ -12,7 +12,7 @@
 </div>
 
 <p align="center" width="100%">
-  <img src="assets/logo.png" alt="RabbitHole Logo" width="200"/>
+  <img src="assets/logo.png" alt="RabbitHole Logo" width="300"/>
 </p>
 
 <!-- Badges -->
