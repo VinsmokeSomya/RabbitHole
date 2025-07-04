@@ -1,3 +1,3 @@
-"""wormhole CLI"""
+"""rabbithole CLI"""
 
 __all__: list[str] = []

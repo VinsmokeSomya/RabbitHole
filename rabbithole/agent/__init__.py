@@ -1,4 +1,4 @@
-"""wormhole agent"""
+"""rabbithole agent"""
 
 from . import adk
 from . import oai
