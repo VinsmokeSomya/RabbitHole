@@ -69,28 +69,28 @@ This view describes the system's structure as it exists at runtime. It shows the
 
 ```mermaid
 graph TD
-    subgraph User Machine
+    subgraph "User Machine"
         CLI_Client["💻 CLI Client (__main__.py)"]
     end
 
-    subgraph Server Environment (Local or Docker)
+    subgraph "Server Environment (Local or Docker)"
         A2A_Server["🌐 A2A Server (FastAPI)"]
         TaskManager["🌀 Task Manager"]
         AgentLogic["🤖 Agent Logic (e.g., adk/agent.py)"]
     end
 
-    subgraph External Services
+    subgraph "External Services"
         LLM["🧠 Large Language Model (e.g., Gemini)"]
     end
 
-    CLI_Client -- HTTP Request (task) --> A2A_Server
-    A2A_Server -- Invokes task --> TaskManager
-    TaskManager -- Executes logic --> AgentLogic
-    AgentLogic -- Calls --> LLM
-    LLM -- Returns response --> AgentLogic
-    AgentLogic -- Returns result --> TaskManager
-    TaskManager -- Sends result --> A2A_Server
-    A2A_Server -- HTTP Response (result) --> CLI_Client
+    CLI_Client -- "HTTP Request (task)" --> A2A_Server
+    A2A_Server -- "Invokes task" --> TaskManager
+    TaskManager -- "Executes logic" --> AgentLogic
+    AgentLogic -- "Calls" --> LLM
+    LLM -- "Returns response" --> AgentLogic
+    AgentLogic -- "Returns result" --> TaskManager
+    TaskManager -- "Sends result" --> A2A_Server
+    A2A_Server -- "HTTP Response (result)" --> CLI_Client
 
     style A2A_Server fill:#f9f,stroke:#333,stroke-width:2px
     style AgentLogic fill:#ccf,stroke:#333,stroke-width:2px
