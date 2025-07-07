@@ -87,7 +87,7 @@ To effectively use RabbitHole, it's helpful to understand its core components.
 ### 3.1. High-Level Workflow
 Here is a diagram visualizing how the components interact when a user sends a message:
 
-```ascii
+```text
   +----------------------+      +--------------------------------+      +-----------------------+
   | 👤 User via CLI      | ---> | 🐇 RabbitHole Agent Server    | ---> | 🧠 LLM (e.g., Gemini) |
   | (rabbithole/cli)     | <--- | (rabbithole/agent/adk or /oai) | <--- | (generative AI)       |
