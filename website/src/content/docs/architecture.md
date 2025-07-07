@@ -1,3 +1,8 @@
+---
+title: Architecture
+description: A guide to the architecture of RabbitHole.
+---
+
 # RabbitHole Software Architecture Description (SAD)
 
 **Version:** 1.0
@@ -131,7 +136,7 @@ The primary deployment strategy for the agent server is via a **Docker container
 - The container exposes the agent server on a specific port (e.g., 10000).
 - Port mapping on the host machine makes the agent server accessible to local clients, such as the `rabbithole/cli`.
 - The `GOOGLE_API_KEY` is injected into the container as an environment variable, decoupling the container image from the secret.
-- Alternatively, the server can be run directly on a host machine with a Python environment.
+- Alternatively, the.md can be run directly on a host machine with a Python environment.
 
 ---
 

@@ -1,3 +1,7 @@
+---
+title: Getting Started
+description: A getting started guide for RabbitHole.
+---
 # RabbitHole Documentation
 
 Welcome to the official documentation for RabbitHole!
@@ -112,7 +116,7 @@ Here is a diagram visualizing how the components interact when a user sends a me
 ## 4. Next Steps
 
 - **Deep Dive into the Architecture:**
-  To understand the design principles and different views of the system, read the **[Software Architecture Description](./architecture.md)**.
+  To understand the design principles and different views of the system, read the **[Software Architecture Description](./architecture)**.
 
 - **Create Your Own Agent:**
   Follow the pattern in the `rabbithole/agent/adk` directory to create a new agent with a different LLM or custom tools.

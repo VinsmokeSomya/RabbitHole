@@ -1,3 +1,8 @@
+---
+title: How-to & Examples
+description: A guide for running and testing RabbitHole.
+---
+
 # How to Run and Test RabbitHole
 
 This guide provides a focused, step-by-step walkthrough for running the RabbitHole agent, clients, and test suite.

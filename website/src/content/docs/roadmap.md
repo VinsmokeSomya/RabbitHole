@@ -1,3 +1,8 @@
+---
+title: Roadmap
+description: The project roadmap for RabbitHole.
+---
+
 # RabbitHole Project Roadmap
 
 This document outlines the planned features, enhancements, and milestones for the RabbitHole framework. Our goal is to evolve RabbitHole into a comprehensive, robust, and easy-to-use platform for building and orchestrating AI agents.

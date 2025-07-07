@@ -1,12 +1,17 @@
+---
+title: Technical Blueprint
+description: The technical blueprint for RabbitHole's major features.
+---
+
 # RabbitHole Technical Blueprint
 
-This document provides a high-level technical blueprint for the major features outlined in the project [Roadmap](./roadmap.md). It is intended to guide architectural decisions and spark technical discussions for future development.
+This document provides a high-level technical blueprint for the major features outlined in the project [Roadmap](./roadmap). It is intended to guide architectural decisions and spark technical discussions for future development.
 
 ---
 
 ## 1. Blueprint for Standardized Tool & Function Calling
 
-**Associated Roadmap Phase:** 2  
+**Associated Roadmap Phase:** 2
 **Goal:** Enable agents to reliably use external tools.
 
 ### 1.1. Architectural Changes
@@ -54,7 +59,7 @@ sequenceDiagram
 
 ## 2. Blueprint for Multi-Agent Orchestration
 
-**Associated Roadmap Phase:** 3  
+**Associated Roadmap Phase:** 3
 **Goal:** Enable complex workflows involving multiple, specialized agents.
 
 ### 2.1. Architectural Additions
