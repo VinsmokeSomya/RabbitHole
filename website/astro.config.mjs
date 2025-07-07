@@ -9,9 +9,6 @@ export default defineConfig({
 	integrations: [
 		starlight({
 			title: 'RabbitHole',
-			logo: {
-				src: '~/assets/logo.svg',
-			  },
 			social: [
 				{
 					icon: 'github',
