@@ -6,7 +6,7 @@ import svelte from '@astrojs/svelte';
 // https://astro.build/config
 export default defineConfig({
   // TODO: Replace `<YOUR-GITHUB-USERNAME>` with your actual GitHub username.
-  site: 'https://<YOUR-GITHUB-USERNAME>.github.io',
+  site: 'https://VinsmokeSomya.github.io',
   base: '/RabbitHole',
   integrations: [svelte()]
 });
