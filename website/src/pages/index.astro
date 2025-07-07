@@ -1,11 +1,18 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+// This page now redirects to the /docs page.
 ---
 
-<Layout>
-	<Welcome />
-</Layout>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<title>RabbitHole Docs</title>
+        <meta http-equiv="refresh" content="0;url=/RabbitHole/docs" />
+	</head>
+	<body>
+		<h1>Redirecting to documentation...</h1>
+        <p>If you are not redirected automatically, <a href="/RabbitHole/docs">click here</a>.</p>
+	</body>
+</html>
