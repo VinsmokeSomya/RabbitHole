@@ -18,14 +18,14 @@
 <!-- Badges -->
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/github/license/VinsmokeSomya/RabbitHole?style=for-the-badge" alt="License"></a>
-  <a href="https://github.com/VinsmokeSomya/RabbitHole/stargazers"><img src="https://img.shields.io/github/stars/VinsmokeSomya/RabbitHle?style=for-the-badge&logo=github" alt="Stars"></a>
+  <a href="https://github.com/VinsmokeSomya/RabbitHole/stargazers"><img src="https://img.shields.io/github/stars/VinsmokeSomya/RabbitHole?style=for-the-badge&logo=github" alt="Stars"></a>
   <a href="https://github.com/VinsmokeSomya/RabbitHole/issues"><img src="https://img.shields.io/github/issues/VinsmokeSomya/RabbitHole?style=for-the-badge" alt="Issues"></a>
   <img src="https://img.shields.io/badge/Python-3.11+-blue.svg?style=for-the-badge&logo=python" alt="Python Version">
 </p>
 
-**RabbitHole** is a developer-first framework for building and orchestrating LLM-powered agents. It simplifies the complexity of agent-to-agent communication, allowing you to focus on building powerful, intelligent applications.
+**RabbitHole** is a Python framework for building and orchestrating LLM-powered agents. It acts as a universal translator, providing a standardized **Agent-to-Agent (A2A) communication protocol** that allows agents from different providers (Google, OpenAI, etc.) to work together seamlessly.
 
-Inspired by giants like **LangChain**, our vision is to create a comprehensive, interoperable ecosystem where agents built on different platforms can communicate and collaborate seamlessly.
+While inspired by tools like LangChain that help build powerful individual agents, RabbitHole focuses on a higher level of abstraction: **multi-agent orchestration**. It provides the backbone for a *society* of agents to collaborate on complex tasks.
 
 ## 🤔 Why RabbitHole?
 
@@ -92,22 +92,23 @@ You're now chatting with your first agent! For more detailed instructions, check
 
 ## 📚 Documentation
 
-Dive deeper into the RabbitHole ecosystem with our comprehensive guides:
+Our documentation provides a deep dive into the framework's architecture, vision, and usage.
 
-- **[User & Contributor Guide](./docs/documentation.md)**: For getting started, core concepts, and contributing.
+- **[Live Documentation Website](https://vinsmokesomya.github.io/RabbitHole/)**: The best place to start, with full search and navigation.
+- **[Getting Started](./docs/documentation.md)**: Your main guide to installation, core concepts, and contributing.
+- **[Framework Vision](./docs/FRAMEWORK_VISION.md)**: Understand the "why" behind RabbitHole and its strategic direction.
 - **[Software Architecture](./docs/architecture.md)**: A technical deep-dive into the system's design.
+- **[Feature Ideas](./docs/FEATURE_IDEAS.md)**: See the list of potential upcoming features.
+- **[Official Roadmap](./docs/roadmap.md)**: The planned milestones for the project.
 - **[Developer Guide](./DEV-README.md)**: Everything you need to know to contribute code.
 
-## 🗺️ Project Vision & Roadmap
+## 🗺️ Vision & Roadmap
 
-Our goal is to evolve RabbitHole into a leading framework for AI agent development, on par with industry standards like LangChain and LlamaIndex.
+Our vision is to build the premier open-source framework for creating and orchestrating multi-agent systems. To understand our goals and where the project is headed, please see our detailed documents:
 
-Our roadmap includes:
-- [ ] **Expanded Agent Support**: Integrating more agent SDKs (e.g., from Anthropic, Cohere).
-- [ ] **Tool and Function Calling**: Standardized interfaces for agents to use external tools.
-- [ ] **Agent Orchestration**: Building complex, multi-agent workflows (similar to LangGraph).
-- [ ] **Memory and State Management**: Providing built-in solutions for long-term agent memory.
-- [ ] **Deployment Solutions**: Simplified deployment to cloud platforms.
+- **[Framework Vision & Strategy](./docs/FRAMEWORK_VISION.md)**
+- **[Project Roadmap](./docs/roadmap.md)**
+- **[Feature Ideas](./docs/FEATURE_IDEAS.md)**
 
 ## 🤝 Contributing
 

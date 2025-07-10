@@ -111,11 +111,17 @@ Here is a diagram visualizing how the components interact when a user sends a me
 
 ## 4. Next Steps
 
-- **Deep Dive into the Architecture:**
-  To understand the design principles and different views of the system, read the **[Software Architecture Description](./architecture.md)**.
+- **Explore the Project's Vision:**
+  To understand the "why" behind the project, its strategic goals, and how it's different from other frameworks, read the **[Framework Vision & Strategy](./FRAMEWORK_VISION.md)**.
+
+- **Understand the Architecture:**
+  For a technical deep-dive into the design principles and system components, read the **[Software Architecture Description](./architecture.md)**.
 
 - **Create Your Own Agent:**
   Follow the pattern in the `rabbithole/agent/adk` directory to create a new agent with a different LLM or custom tools.
+
+- **See What's Next:**
+  Check out the **[Official Roadmap](./roadmap.md)** for planned milestones and the **[Feature Ideas](./FEATURE_IDEAS.md)** log for what we're considering.
 
 - **Contribute to the Project:**
   We welcome contributions! Check the `README.md` for guidelines on how to contribute. 
