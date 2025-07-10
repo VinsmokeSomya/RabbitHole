@@ -57,7 +57,7 @@ export default defineConfig({
               ],
           },
       ],
-  }), svelte(), react()],
+    }), svelte(), react()],
 
   vite: {
     plugins: [tailwindcss()],
