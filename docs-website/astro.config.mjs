@@ -10,8 +10,8 @@ import react from '@astrojs/react';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://VinsmokeSomya.github.io',
-
+  site: 'https://vinsmokesomya.github.io',
+  base: '/RabbitHole',
   integrations: [
     starlight({
       title: 'RabbitHole',
