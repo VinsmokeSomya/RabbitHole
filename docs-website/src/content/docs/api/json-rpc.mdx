@@ -1,0 +1,68 @@
+---
+title: "API Reference: JSON-RPC"
+description: "A detailed reference of the JSON-RPC methods and models used in the RabbitHole A2A protocol."
+---
+
+The RabbitHole framework uses the [JSON-RPC 2.0](https://www.jsonrpc.org/specification) specification for all communication between clients and the A2A server.
+
+## Request and Response Wrappers
+
+All messages are wrapped in a standard JSON-RPC envelope.
+
+### `JSONRPCRequest`
+- `jsonrpc: "2.0"`
+- `id: int | str | None`: A unique request ID.
+- `method: str`: The name of the method to be invoked (e.g., `tasks/send`).
+- `params: object`: The parameters for the method.
+
+### `JSONRPCResponse`
+- `jsonrpc: "2.0"`
+- `id: int | str | None`: The ID from the corresponding request.
+- `result: any | None`: The data returned by a successful method call.
+- `error: JSONRPCError | None`: An error object if the method call failed.
+
+---
+
+## Core Methods
+
+These are the primary RPC methods for interacting with tasks.
+
+### `tasks/send`
+Submits a new task to the agent. This is a non-streaming method and will only return the final `Task` object after completion.
+
+-   **Request Params:** `TaskSendParams`
+-   **Response Result:** `Task`
+
+### `tasks/sendSubscribe`
+Submits a new task and subscribes to real-time status and artifact updates. This is the recommended method for interactive clients.
+
+-   **Request Params:** `TaskSendParams`
+-   **Response Result:** A stream of `TaskStatusUpdateEvent` or `TaskArtifactUpdateEvent` objects.
+
+### `tasks/get`
+Retrieves the current state of a previously submitted task.
+
+-   **Request Params:** `TaskQueryParams`
+-   **Response Result:** `Task`
+
+### `tasks/cancel`
+Attempts to cancel a running task.
+
+-   **Request Params:** `TaskIdParams`
+-   **Response Result:** `Task` (reflecting the new `CANCELED` state).
+
+---
+
+## JSON-RPC Errors
+The framework defines several standard JSON-RPC error codes.
+
+| Code    | Name                          | Description                               |
+| :------ | :---------------------------- | :---------------------------------------- |
+| -32700  | JSONParseError                | The received JSON was malformed.          |
+| -32600  | InvalidRequestError           | The request object is not a valid JSON-RPC object. |
+| -32601  | MethodNotFoundError           | The requested method does not exist.      |
+| -32602  | InvalidParamsError            | The parameters for the method are invalid. |
+| -32603  | InternalError                 | An unexpected error occurred on the server. |
+| -32001  | TaskNotFoundError             | The requested task ID could not be found. |
+| -32002  | TaskNotCancelableError        | The task is in a state where it cannot be canceled. |
+| -32003  | PushNotificationNotSupportedError | The agent does not support push notifications. | 

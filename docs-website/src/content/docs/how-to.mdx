@@ -2,6 +2,8 @@
 title: How-To Guides
 description: Step-by-step guides for running and testing RabbitHole.
 ---
+import TabGroup from '../../components/TabGroup.svelte';
+import TabPanel from '../../components/TabPanel.svelte';
 
 This guide provides a focused, step-by-step walkthrough for running the RabbitHole agent, clients, and test suite.
 
@@ -21,23 +23,41 @@ This method uses a local Python virtual environment and is ideal for development
 # Clone the repository
 git clone https://github.com/VinsmokeSomya/RabbitHole.git
 cd RabbitHole
+```
 
-# Create and activate a virtual environment
-python -m venv .venv
-# Windows: .venv\Scripts\activate | macOS/Linux: source .venv/bin/activate
-source .venv/bin/activate
+### Step 2: Create and activate a virtual environment
+<TabGroup labels={["Windows", "macOS/Linux"]}>
+    <TabPanel label="Windows">
+        ```bash
+        # Create a virtual environment
+        python -m venv .venv
+        # Activate it
+        .venv\Scripts\activate
+        ```
+    </TabPanel>
+    <TabPanel label="macOS/Linux">
+        ```bash
+        # Create a virtual environment
+        python -m venv .venv
+        # Activate it
+        source .venv/bin/activate
+        ```
+    </TabPanel>
+</TabGroup>
 
+### Step 3: Install Dependencies
+```bash
 # Install in editable mode with development dependencies
 pip install -e ".[dev]"
 ```
 
-### Step 2: Set Up Your API Key
+### Step 4: Set Up Your API Key
 The agent needs a Large Language Model (LLM) to function.
 1.  Navigate to the agent directory: `cd rabbithole/agent/adk`
 2.  Copy the template environment file: `cp .env.template .env`
 3.  Open the new `.env` file and add your `GOOGLE_API_KEY`.
 
-### Step 3: Run the Agent Server
+### Step 5: Run the Agent Server
 From the `rabbithole/agent/adk` directory, start the server:
 ```bash
 # This will run the __main__.py in the current directory
@@ -45,7 +65,7 @@ python .
 ```
 The server will start on `http://localhost:10000`. Leave this terminal window running.
 
-### Step 4: Run the CLI Client
+### Step 6: Run the CLI Client
 Open a **new terminal window**, activate the virtual environment again, and run the following:
 ```bash
 # Navigate to the CLI directory
@@ -56,7 +76,7 @@ python . --agent http://localhost:10000
 ```
 You can now chat with your agent via the command line.
 
-### Step 5: Run the Streamlit UI
+### Step 7: Run the Streamlit UI
 To use the web interface, open a **new terminal window**, activate the virtual environment, and run the following from the project's **root directory**:
 ```bash
 streamlit run rabbithole/ui/streamlit_app.py

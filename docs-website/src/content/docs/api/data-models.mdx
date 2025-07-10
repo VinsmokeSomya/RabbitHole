@@ -1,0 +1,82 @@
+---
+title: "API Reference: Data Models"
+description: "A detailed reference of the core data models used in the RabbitHole A2A protocol."
+---
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+This document provides a detailed reference for the core Pydantic data models that form the backbone of the RabbitHole Agent-to-Agent (A2A) communication protocol.
+
+## Core Models
+
+These are the most fundamental data structures you'll interact with.
+
+<CardGrid stagger>
+    <Card title="Task" icon="document">
+        The central object representing a job for an agent to perform. It contains the status, history, and artifacts.
+    </Card>
+    <Card title="Message" icon="message">
+        A single user or agent message, which is composed of one or more `Part` objects.
+    </Card>
+    <Card title="Artifact" icon="attachment">
+        Represents any data produced by an agent that is not a direct conversational response, like a file or a block of code.
+    </Card>
+</CardGrid>
+
+---
+
+### `TaskState`
+An `Enum` representing the life cycle of a task.
+
+- `SUBMITTED`: The task has been received but is not yet being worked on.
+- `WORKING`: The agent is actively processing the task.
+- `INPUT_REQUIRED`: The agent requires additional input from the user to continue.
+- `COMPLETED`: The task has finished successfully.
+- `CANCELED`: The task was canceled by the user.
+- `FAILED`: The task terminated with an error.
+- `UNKNOWN`: The state of the task cannot be determined.
+
+---
+
+### `Part` Objects
+A `Message` is made up of `parts`. Each part can be one of the following types:
+
+#### `TextPart`
+The most common part, representing a string of text.
+- `type: "text"`
+- `text: str`
+
+#### `FilePart`
+Represents a file. The file's content must be provided as either a URI or base64-encoded bytes.
+- `type: "file"`
+- `file: FileContent`
+  - `name: str | None`
+  - `mimeType: str | None`
+  - `bytes: str | None`
+  - `uri: str | None`
+
+#### `DataPart`
+A generic container for structured JSON data.
+- `type: "data"`
+- `data: dict[str, Any]`
+
+---
+
+### `Message`
+A message sent between a user and an agent.
+- `role: "user" | "agent"`: Who sent the message.
+- `parts: List[Part]`: The content of the message.
+- `metadata: dict | None`: Optional arbitrary metadata.
+
+---
+
+### `Task`
+The main object that encapsulates a conversation and its state.
+- `id: str`: A unique identifier for the task.
+- `sessionId: str | None`: An identifier for a series of related tasks.
+- `status: TaskStatus`: The current state of the task.
+  - `state: TaskState`
+  - `message: Message | None`
+  - `timestamp: datetime`
+- `artifacts: List[Artifact] | None`: A list of artifacts associated with the task.
+- `history: List[Message] | None`: The full conversation history.
+- `metadata: dict | None`: Optional arbitrary metadata. 

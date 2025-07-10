@@ -7,10 +7,12 @@ import svelte from '@astrojs/svelte';
 // https://astro.build/config
 export default defineConfig({
 	site: 'https://VinsmokeSomya.github.io',
-	base: '/RabbitHole',
 	integrations: [
 		starlight({
 			title: 'RabbitHole',
+			logo: {
+				src: './src/assets/logo.png',
+			},
 			social: [
 				{
 					icon: 'github',
@@ -36,6 +38,13 @@ export default defineConfig({
 						{ label: 'Architecture', slug: 'architecture' },
 						{ label: 'Technical Blueprint', slug: 'blueprint' },
 						{ label: 'Roadmap', slug: 'roadmap' },
+					],
+				},
+				{
+					label: 'API Reference',
+					items: [
+						{ label: 'Data Models', slug: 'api/data-models' },
+						{ label: 'JSON-RPC', slug: 'api/json-rpc' },
 					],
 				},
 			],
