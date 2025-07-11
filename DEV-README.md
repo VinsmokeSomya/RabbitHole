@@ -1,3 +1,9 @@
+<div align="center">
+  🚩🧡🕉️ || जय श्री राम || 🕉️🧡🚩
+</div>
+
+---
+
 # RabbitHole - Developer Guide
 
 Welcome, contributor! We're thrilled that you're interested in improving RabbitHole. This guide provides all the information you need to get your development environment set up and start contributing.
